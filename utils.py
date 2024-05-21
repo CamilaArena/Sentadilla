@@ -27,8 +27,6 @@ def extraer_posiciones(df, frame_number, *articulaciones):
     return data
 
 # Dado un dataframe y un numero de frame, retorna la velocidad instantánea correspondiente a la fila con el numero de frame pasado por parámetro.
-
-# %%
 def extraer_velocidad(df, frame_number):
     # Buscar la fila correspondiente al número de frame
     row = df[df['frame_number'] == frame_number]

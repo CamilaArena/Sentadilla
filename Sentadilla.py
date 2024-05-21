@@ -1,4 +1,3 @@
-
 import cv2
 import numpy as np
 import pandas as pd
@@ -8,26 +7,17 @@ import plotly.graph_objects as go
 from utils import *
 from plotly.subplots import make_subplots
 
-# %% [markdown]
 # # Rutas
-# Definición de las rutas de input y output
-
-# %%
 video_paths = ["/Users/aitorortunio/Downloads/Fisica/mov_pie.mov"]
 output_video_paths = ["/Users/aitorortunio/Downloads/Fisica/tracked_video.mp4"]
 output_csv_paths = ["/Users/aitorortunio/Downloads/Fisica/pose_data.csv"]
 
-# %% [markdown]
 # # Input usuario
-
-# %%
 peso_persona = 65 #kg
 altura_persona = 176 #cm
 peso_pesa = 140 #kg
 
-# %% [markdown]
 # # Crear columnas del dataframe
-# 
 # Procesa el video y almacena los datos de las poses. Define las columnas para un DataFrame donde se guardarán las coordenadas de las articulaciones detectadas en cada cuadro del video.
 
 # %%
@@ -66,21 +56,10 @@ columns.append("Aceleracion(Cadera)_Y")
 columns.append("Torque(Rodilla)")
 columns.append("Torque(Cadera)")
 
-
-# %% [markdown]
 # # Centro de Masa
-# 
-# ---
-# 
-# 
 # Es el punto donde se puede considerar que toda la masa del objeto está distribuida uniformemente.
 # 
 # Centro de masa = (sumatoria de las masas * sumatoria de las posiciones)/masa total
-# 
-# 
-# 
-
-# %%
 def obtenerCentroDeMasa():
    # suponiendo que la persona pesa 65kg y la barra viendo los discos pesa otros 60kg
     masaTotal = 125 # en kilos
@@ -104,10 +83,7 @@ def obtenerCentroDeMasa():
     # deberia dar coordenada
     return (SumatoriaX , SumatoriaY)
 
-# %% [markdown]
 # # Dibujar diagrama
-
-# %%
 def diagrama_cuerpo(frame_number):
   #centro = obtenerCentroDeMasa()
   left_wrist, right_wrist, left_ankle =  extraer_posiciones(df_completo, frame_number, 'LEFT_WRIST', 'RIGHT_WRIST', 'LEFT_ANKLE')
@@ -127,12 +103,8 @@ def diagrama_cuerpo(frame_number):
 
 
 
-# %% [markdown]
 # # Diagrama de cuerpo libre / Peso, Normal y Fuerza
 # 
-
-# %%
-
 def diagramaDeCuerpo():
     # Valores fijos se encuentran declarados al inicio
     # Valor de la gravedad / aceleracion m/s2
@@ -212,7 +184,6 @@ def generate_free_body_diagrams():
 diagramaDeCuerpo()
 generate_free_body_diagrams()
 
-# %% [markdown]
 # # Cálculo de Torque
 # 
 # Se analiza los torques de cadera y rodilla durante una sentadilla. Primero, identifica las posiciones de las articulaciones de la cadera, rodilla y tobillo.
@@ -223,8 +194,6 @@ generate_free_body_diagrams()
 # 
 # Brazo momento = distancia entre articulación y carga (es la distancia desde el punto donde se aplica una fuerza hasta el punto de giro, en este caso el punto de giro es la cadera y la rodilla, y el punto de fuerza se hace desde la muñeca)
 # F = 2/3 de lo que pesa la persona (cabeza y torso) + peso de carga
-
-# %%
 def calcular_torques(a, b, c, d):
    # left_wrist, left_hip, left_knee, left_ankle = extraer_posiciones(landmarks,frame_number ,'LEFT_WRIST', 'LEFT_HIP', 'LEFT_KNEE', 'LEFT_ANKLE')
     e = (a[0], b[1])
@@ -235,7 +204,6 @@ def calcular_torques(a, b, c, d):
     # Perpendicular a la fuerza
     distancia_b_e = coordenadas_a_distancia(b, e)
     distancia_c_r = coordenadas_a_distancia(c, r)
-
 
     #angulo_a_b_c = calculate_angle(a, b, c)
     #angulo_a_b_e = calculate_angle(a, b, e)
@@ -260,10 +228,7 @@ def calcular_torques(a, b, c, d):
     return [torque_rodilla, torque_cadera]
     # Comparar resultados de los torques y mostrar algo en el video
 
-# %% [markdown]
 # # Visualizar trackeo articulaciones relevantes
-
-# %%
 def dibujar_articulaciones_relevantes(articulacion1, articulacion2, articulacion3, articulacion4):
     art1 = np.array(articulacion1)
     art2 = np.array(articulacion2)
@@ -285,10 +250,7 @@ def dibujar_articulaciones_relevantes(articulacion1, articulacion2, articulacion
     f3 = (int(art4[0] * video_width), int(art4[1] * video_height))
     cv2.line(image, i3, f3, color, 5)
 
-# %% [markdown]
 # # Visualizar esfuerzo piernas
-
-# %%
 def dibujar_piernas(articulacion1, articulacion2, articulacion3):
     art1 = np.array(articulacion1)
     art2 = np.array(articulacion2)
@@ -319,14 +281,9 @@ def dibujar_piernas(articulacion1, articulacion2, articulacion3):
     # f2 = (int(art3[0] * video_width), int(art3[1] * video_height))
     # cv2.circle(image, centro_art3,20, color, 3, 20)
 
-# %% [markdown]
-# # **Código para recorrer frames del video y realizar cálculos**
-# 
+# # Código para recorrer frames del video y realizar cálculos
 # Este bloque de código recorre cada frame del video, procesa la imagen utilizando MediaPipe para detectar landmarks de la pose, y guarda los datos en un DataFrame. Luego, calcula el ángulo entre las articulaciones de la cadera, la rodilla y el tobillo. Después, dibuja los landmarks detectados en el video y guarda el video procesado en el archivo de salida. Finalmente, libera los recursos utilizados y guarda los datos de la pose en un archivo CSV.
-
-# %%
 for i, video_path in enumerate(video_paths):
-    # Configurar VideoCapture para el video actual
     cap = cv2.VideoCapture(video_path)
 
     # Obtener propiedades del video
