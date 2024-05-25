@@ -21,9 +21,8 @@ def extraer_posiciones(df, frame_number, *articulaciones):
     for articulacion in articulaciones:
         x = row[articulacion+ '_X'].iloc[0]
         y = row[articulacion+ '_Y'].iloc[0]
-        z = row[articulacion+ '_Z'].iloc[0]
 
-        data.append([x, y, z])
+        data.append([x, y])
     return data
 
 # Dado un dataframe y un numero de frame, retorna la velocidad instantánea correspondiente a la fila con el numero de frame pasado por parámetro.

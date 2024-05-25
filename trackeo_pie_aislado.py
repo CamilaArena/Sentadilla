@@ -13,7 +13,7 @@ pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_t
 mp_drawing = mp.solutions.drawing_utils
 
 # Read input video
-video_path = '/Users/aitorortunio/Downloads/Fisica/sentado2.mov'
+video_path = '/Users/valen/Downloads/Fisica/sentado2.mp4'
 cap = cv2.VideoCapture(video_path)
 
 # Get video properties
@@ -43,12 +43,13 @@ for landmark in articulaciones:
     columns.append(landmark.name + '_Y')
 
 columns.append("VelocidadAngular")
+columns.append("AceleracionAngular")
 
 # Prepare output video
-out = cv2.VideoWriter('/Users/aitorortunio/Downloads/Fisica/tracked_pie_sentado.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (output_width, output_height))
+out = cv2.VideoWriter('/Users/valen/Downloads/Fisica/tracked_pie_sentado.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (output_width, output_height))
 
 # Prepare CSV file for landmark data
-csv_file_path = '/Users/aitorortunio/Downloads/Fisica/landmarks.csv'
+csv_file_path = '/Users/valen/Downloads/Fisica/landmarks.csv'
 df = pd.DataFrame(columns=columns)
 
 frame_index = 0
@@ -82,6 +83,17 @@ while cap.isOpened():
             result.pose_landmarks, 
             mp_pose.POSE_CONNECTIONS)
 
+    df = pd.concat([df, pd.DataFrame([pose_row])], ignore_index=True)
+    if(frame_index>0):
+        pos_prev_left_knee, pos_prev_left_ankle, pos_prev_left_heel = extraer_posiciones(df, frame_index-1, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL')
+        pos_actual_left_knee, pos_actual_left_ankle, pos_actual_left_heel = extraer_posiciones(df, frame_index, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL')
+
+        # VELOCIDAD ANGULAR
+        angulo_anterior = calculate_angle((pos_prev_left_knee[0], pos_prev_left_knee[1]), (pos_prev_left_ankle[0], pos_prev_left_ankle[1]), (pos_prev_left_heel[0], pos_prev_left_heel[1]))
+        angulo_actual = calculate_angle((pos_actual_left_knee[0], pos_actual_left_knee[1]), (pos_actual_left_ankle[0], pos_actual_left_ankle[1]), (pos_actual_left_heel[0], pos_actual_left_heel[1]))
+        vel_angular = velocidad_angular(angulo_anterior, angulo_actual, tiempo_por_frame)
+        df.loc[df["frame_number"] == frame_index, "VelocidadAngular"] = vel_angular
+
     # Convert back to BGR for video writing
     output_frame = cv2.cvtColor(rgb_frame, cv2.COLOR_RGB2BGR)
     
@@ -91,7 +103,7 @@ while cap.isOpened():
     frame_index += 1
 
     # Save data to DataFrame
-    df = pd.concat([df, pd.DataFrame([pose_row])], ignore_index=True)
+    
     df.to_csv(csv_file_path, index=False)
 
 # Release resources
