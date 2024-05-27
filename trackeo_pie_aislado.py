@@ -33,7 +33,9 @@ articulaciones = [
     mp_pose.PoseLandmark.LEFT_ANKLE,
     mp_pose.PoseLandmark.LEFT_HEEL,
     mp_pose.PoseLandmark.LEFT_FOOT_INDEX,
-    mp_pose.PoseLandmark.LEFT_KNEE
+    mp_pose.PoseLandmark.LEFT_KNEE,
+    mp_pose.PoseLandmark.LEFT_HIP
+
 ]
 
 columns = ['frame_number']
