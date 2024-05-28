@@ -38,7 +38,9 @@ def coordenadas_a_distancia(a, b):
     dy = b[1] - a[1]
 
     # Relación pixel-distancia en el eje x y en el eje y
-    relacion_pixel_distancia = (0.58/0.292, 0.614)
+    relacion_pixel_distancia = (0.44/0.15116006135, 0.46/0.26961168646)
+    # 0.15116006135 distancia de rodilla a tobillo en frame 68 en Y (medir) = 44cm
+    # 0.26961168646 distancia de cadera a rodilla en frame 68 en X (medir) = 46cm
 
     # Convierte la diferencia en píxeles a distancia real usando la relación pixel-distancia
     distancia_x = dx * relacion_pixel_distancia[0]
