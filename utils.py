@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 def calculate_angle(a, b, c):
   radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
@@ -68,3 +69,22 @@ def aceleracion_instantanea(vel_actual_x, vel_anterior_x, vel_actual_y, vel_ante
   dvx = vel_actual_x - vel_anterior_x
   dvy = vel_actual_y - vel_anterior_y
   return (dvx/tiempo, dvy/tiempo)
+
+def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index):
+  # Masa del pie
+  masa = 30
+  distancia_pie = ((pos_left_heel[0]-pos_left_foot_index[0])**2 + (pos_left_heel[1]-pos_left_foot_index[1])**2)**0.5
+  # Distancia desde el tobillo a donde se aplica la fuerza, es decir, talon.
+  distancia_momento = ((pos_left_ankle[0]-pos_left_heel[0])**2 + (pos_left_ankle[1]-pos_left_heel[1])**2)**0.5
+  # Obtengo la aceleracion angular del dataframe
+  aceleracionAngular = df.loc[df["frame_number"] == frame_number, "AceleracionAngular"].iloc[0]
+  # Obtengo angulo entre la rodilla, tobillo, talon y lo paso a radianes para calcular el sen
+  angulo = calculate_angle(pos_left_knee,pos_left_ankle,pos_left_heel)
+  angulo_radianes = math.radians(angulo)
+  # Calculo el momento de fuerza generado en el tobillo
+  magnitud_fuerza_gemelo = ((1/2 * masa * distancia_pie**2) * aceleracionAngular) / (distancia_momento * math.sin(angulo_radianes))
+  # Vector fuerza gemelo es el vector unitario que va desde el tobillo a la rodilla
+  vector_fuerza_gemelo_unitario = (pos_left_ankle[0] - pos_left_knee[0], pos_left_ankle[1] - pos_left_knee[1]) / ((pos_left_ankle[0]-pos_left_knee[0])**2 + (pos_left_ankle[1]-pos_left_knee[1])**2)**0.5
+  
+  # Al vector fuerza gemelo lo multiplico por la fuerza que realiza este y lo devuelvo
+  return (vector_fuerza_gemelo_unitario[0] * magnitud_fuerza_gemelo, vector_fuerza_gemelo_unitario[1] * magnitud_fuerza_gemelo)
