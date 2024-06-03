@@ -118,9 +118,7 @@ columnas_a_suavizar = [
 
 # Aplicar el filtro Savitzky-Golay a cada columna
 for columna in columnas_a_suavizar:
-    df_nuevo[columna] = savgol_filter(df[columna], window_length=10, polyorder=2)
-
-#df_nuevo['VelocidadAngular'] = savgol_filter(df['VelocidadAngular'], window_length=10, polyorder=2)
+    df_nuevo[columna] = savgol_filter(df[columna], window_length=3, polyorder=2)
 
 for i in range(0, frame_index-1):
     pos_prev_left_knee, pos_prev_left_ankle, pos_prev_left_foot_index = extraer_posiciones(df_nuevo, i, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_FOOT_INDEX')
@@ -132,14 +130,14 @@ for i in range(0, frame_index-1):
     vel_angular = velocidad_angular(angulo_anterior, angulo_actual, tiempo_por_frame)
     df_nuevo.loc[df_nuevo["frame_number"] == i, "VelocidadAngular"] = vel_angular
 
-    # ACELERACION ANGULAR
-    if(i>0):
-        vel_angular_anterior = df_nuevo.loc[df_nuevo["frame_number"] == i-1, "VelocidadAngular"].iloc[0]
-        acel_angular = (vel_angular - vel_angular_anterior) / tiempo_por_frame
-        df_nuevo.loc[df_nuevo["frame_number"] == i, "AceleracionAngular"] = acel_angular
+df_nuevo['VelocidadAngular'] = savgol_filter(df_nuevo['VelocidadAngular'], window_length=3, polyorder=2)
 
-df_nuevo['VelocidadAngular'] = savgol_filter(df['VelocidadAngular'], window_length=10, polyorder=2)
-df_nuevo['AceleracionAngular'] = savgol_filter(df['AceleracionAngular'], window_length=10, polyorder=2)
+for i in range(0, frame_index-1):
+    vel_prev, vel_actual = extraer_velocidad(df_nuevo, i), extraer_velocidad(df_nuevo, i+1)
+    acel_angular = (vel_actual - vel_prev) / tiempo_por_frame
+    df_nuevo.loc[df_nuevo["frame_number"] == i, "AceleracionAngular"] = acel_angular
+
+df_nuevo['AceleracionAngular'] = savgol_filter(df_nuevo['AceleracionAngular'], window_length=3, polyorder=2)
 
 df_nuevo.to_csv(csv_file_path, index=False)
 
@@ -149,10 +147,3 @@ pose.close()
 out.release()
 
 cv2.destroyAllWindows()
-
-"""
-1- Leer las posiciones del video
-2- Filtrar (suavizado) de las posiciones (pasarlo a metros)
-3- Calcular la velocidad angular de rodilla, tobillo y punta del pie
-
-"""

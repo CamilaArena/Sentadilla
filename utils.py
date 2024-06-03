@@ -2,16 +2,17 @@ import numpy as np
 import math
 
 def calculate_angle(a, b, c):
-  radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
-
+  return np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
+  """
   #El ángulo calculado se convierte de radianes a grados y se toma el valor absoluto --> Grados = Radianes * 180 / π
   angle = np.abs(radians*180.0/np.pi)
 
   #Se normaliza el ángulo calculado para asegurarse de que esté en el rango de 0 a 180 grados.
   if angle>180.0:
-    angle = 360-angle
+  #angle = 360-angle
 
   return angle
+  """
 
 # formato output:([[x1, y1, z1], [x2, y2, z2], [x3, y3, z3]]).
 def extraer_posiciones(df, frame_number, *articulaciones):
@@ -30,7 +31,7 @@ def extraer_posiciones(df, frame_number, *articulaciones):
 def extraer_velocidad(df, frame_number):
     # Buscar la fila correspondiente al número de frame
     row = df[df['frame_number'] == frame_number]
-    return row["Velocidad(Cadera)"].iloc[0]
+    return row["VelocidadAngular"].iloc[0]
 
 def coordenadas_a_distancia(a, b):
     # Calcula la diferencia en coordenadas normalizadas
