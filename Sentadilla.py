@@ -63,9 +63,18 @@ columns.append("Torque(Cadera)")
 def obtenerCentroDeMasa():
    # suponiendo que la persona pesa 65kg y la barra viendo los discos pesa otros 60kg
     masaTotal = 125 # en kilos
-    SumatoriaX = 0
-    SumatoriaY = 0
-
+    # primero calculamos de manera estatica como si arrancase en el frame 0
+    CentroDeMasaEnX = 0
+    CentroDeMasaEnY = 0
+    CabezayCuello = 0.073
+    Tronco = 0.506
+    Brazos = 0.026*2
+    Antebrazos = 0.015*2
+    Manos = 0.07*2
+    Muslos = 0.103*2
+    Pantorrillas = 0.043*2
+    Pies = 0.015*2
+            
     while cap.isOpened():
         ret, frame = cap.read()
 
@@ -73,15 +82,18 @@ def obtenerCentroDeMasa():
             break
 
         for landmark in mp_pose.PoseLandmark:
-            SumatoriaX += masaTotal*results.pose_landmarks.landmark[landmark].x
-            SumatoriaY += masaTotal*results.pose_landmarks.landmark[landmark].y
+            x = results.pose_landmarks.landmark[landmark.value].x
+            CentroDeMasaEnX += masaTotal * CabezayCuello * x + masaTotal * Tronco * x + masaTotal * Brazos * x + masaTotal * Antebrazos * x + masaTotal * Manos * x + masaTotal * Muslos * x +masaTotal * Pantorrillas * x + masaTotal * Pies * x
+            y = results.pose_landmarks.landmark[landmark.value].y
+            CentroDeMasaEnY += masaTotal * CabezayCuello * y + masaTotal * Tronco * y + masaTotal * Brazos * y + masaTotal * Antebrazos * y + masaTotal * Manos * y + masaTotal * Muslos * y +masaTotal * Pantorrillas * y + masaTotal * Pies * y
 
-    SumatoriaX /= masaTotal
-    SumatoriaY /= masaTotal
+        CentroDeMasaEnX /= masaTotal
+        CentroDeMasaEnY /= masaTotal
 
     # preguntar si lo que vamos a retornar nos va a dar la posicion de un frame o que nos de una coordenada
     # deberia dar coordenada
-    return (SumatoriaX , SumatoriaY)
+    
+    return (CentroDeMasaEnX , CentroDeMasaEnY)
 
 # # Dibujar diagrama
 def diagrama_cuerpo(frame_number):
@@ -204,7 +216,8 @@ def calcular_torques(a, b, c, d):
     # Perpendicular a la fuerza
     distancia_b_e = coordenadas_a_distancia(b, e)
     distancia_c_r = coordenadas_a_distancia(c, r)
-
+    ##hola
+    
     #angulo_a_b_c = calculate_angle(a, b, c)
     #angulo_a_b_e = calculate_angle(a, b, e)
 
