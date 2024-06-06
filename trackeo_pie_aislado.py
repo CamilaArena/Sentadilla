@@ -46,6 +46,7 @@ for landmark in articulaciones:
 
 columns.append("VelocidadAngular")
 columns.append("AceleracionAngular")
+columns.append("FuerzaGemelo")
 
 # Prepare output video
 out = cv2.VideoWriter('/Users/valen/Downloads/Fisica/tracked_pie_sentado.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (output_width, output_height))
@@ -138,7 +139,15 @@ for i in range(0, frame_index-1):
     df_nuevo.loc[df_nuevo["frame_number"] == i, "AceleracionAngular"] = acel_angular
 
 df_nuevo['AceleracionAngular'] = savgol_filter(df_nuevo['AceleracionAngular'], window_length=3, polyorder=2)
+df_nuevo.interpolate(method='linear',inplace=True)
 
+for i in range(1, frame_index-1):
+    pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index = extraer_posiciones(df_nuevo, i, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL', 'LEFT_FOOT_INDEX')
+    vector_fuerza_gemelo = calcular_fuerza_gemelo(df_nuevo, i, pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index)
+    #magnitud_fuerza = (vector_fuerza_gemelo[0]**2 + vector_fuerza_gemelo[1]**2)**0.5
+    df_nuevo.loc[df_nuevo["frame_number"] == i, "FuerzaGemelo"] = vector_fuerza_gemelo
+    #graficar_vector_fuerza(rgb_frame,vector_fuerza_gemelo,pos_left_ankle,output_width,output_height)
+df_nuevo['FuerzaGemelo'] = savgol_filter(df_nuevo['FuerzaGemelo'], window_length=3, polyorder=2)
 df_nuevo.to_csv(csv_file_path, index=False)
 
 # Release resources
