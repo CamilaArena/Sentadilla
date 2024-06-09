@@ -8,9 +8,9 @@ from utils import *
 from plotly.subplots import make_subplots
 
 # # Rutas
-video_paths = ["/Users/aitorortunio/Downloads/Fisica/mov_pie.mov"]
-output_video_paths = ["/Users/aitorortunio/Downloads/Fisica/tracked_video.mp4"]
-output_csv_paths = ["/Users/aitorortunio/Downloads/Fisica/pose_data.csv"]
+video_paths = ["D:/Fisica/lat_tincho.mov"]
+output_video_paths = ["D:/Fisica/tracked_video.mp4"]
+output_csv_paths = ["D:/Fisica/pose_data.csv"]
 
 # # Input usuario
 peso_persona = 65 #kg
