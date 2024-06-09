@@ -7,6 +7,9 @@ import plotly.graph_objects as go
 from utils import *
 from plotly.subplots import make_subplots
 
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf.symbol_database')
+
 # # Rutas
 video_paths = ["D:/Fisica/lat_tincho.mov"]
 output_video_paths = ["D:/Fisica/tracked_video.mp4"]
