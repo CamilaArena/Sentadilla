@@ -36,6 +36,7 @@ columns.append("Velocidad(Cadera)_X")
 columns.append("Velocidad(Cadera)_Y")
 columns.append("Energia Potencial(Cadera)")
 columns.append("Energia Cinetica(Cadera)")
+columns.append("Energia Mecanica(Cadera)")
 
 # Código para recorrer frames del video y realizar cálculos
 cap = cv2.VideoCapture(video_path)
@@ -114,6 +115,10 @@ while cap.isOpened():
         energia_cinetica_cadera = calcular_energia_cinetica(masa, velocidad_total_cadera)
         df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Cinetica(Cadera)"] = energia_cinetica_cadera
 
+        # ENERGIA MECANICA
+        energia_mecanica_cadera = energia_potencial_cadera + energia_cinetica_cadera
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Mecanica(Cadera)"] = energia_mecanica_cadera
+
     # Escribir el frame procesado en el video de salida
     video_writer.write(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
     frame_number += 1
@@ -130,26 +135,29 @@ print("Datos de la pose guardados en:", output_csv_path)
 
 #-----------------GRAFICOS-------------------
 
-# Código para graficar energías potencial y cinética
+# Código para graficar energías potencial, cinética y mecánica
 df_completo = pd.read_csv(output_csv_path)
 
-# Suavizar las energías potencial y cinética
+# Suavizar las energías potencial, cinética y mecánica
 window_size = 50
 energia_potencial_smoothed = df_completo['Energia Potencial(Cadera)'].rolling(window=window_size).mean()
 energia_cinetica_smoothed = df_completo['Energia Cinetica(Cadera)'].rolling(window=window_size).mean()
+energia_mecanica_smoothed = df_completo['Energia Mecanica(Cadera)'].rolling(window=window_size).mean()
 
 # Crear trazas para las energías
 trace_energia_potencial = go.Scatter(x=df_completo['Tiempo'], y=energia_potencial_smoothed, mode='lines', name='Energía Potencial de la Cadera', line=dict(color='blue'))
 trace_energia_cinetica = go.Scatter(x=df_completo['Tiempo'], y=energia_cinetica_smoothed, mode='lines', name='Energía Cinética de la Cadera', line=dict(color='red'))
+trace_energia_mecanica = go.Scatter(x=df_completo['Tiempo'], y=energia_mecanica_smoothed, mode='lines', name='Energía Mecánica de la Cadera', line=dict(color='green'))
 
 # Crear la figura con subplots
 fig_energias = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1)
 fig_energias.add_trace(trace_energia_potencial, row=1, col=1)
 fig_energias.add_trace(trace_energia_cinetica, row=1, col=1)
+fig_energias.add_trace(trace_energia_mecanica, row=1, col=1)
 
 # Actualizar el diseño de la figura
 fig_energias.update_layout(
-    title='Energía Potencial y Cinética de la Cadera',
+    title='Energía Potencial, Cinética y Mecánica de la Cadera',
     xaxis=dict(title='Tiempo'),
     yaxis=dict(title='Energía (Joules)'),
     legend=dict(x=0.7, y=1.1),
