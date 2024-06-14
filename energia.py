@@ -103,14 +103,15 @@ while cap.isOpened():
 
         # Calcula la altura maxima de la cadera en el video (altura max del salto)
         altura_cadera = calcular_altura(df_completo)
+        masa = peso_persona / 9.8
 
         # ENERGIA POTENCIAL
-        energia_potencial_cadera = calcular_energia_potencial(peso_persona, altura_cadera)
+        energia_potencial_cadera = calcular_energia_potencial(masa, altura_cadera, 9.8)
         df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Potencial(Cadera)"] = energia_potencial_cadera
 
         # ENERGIA CINETICA
         velocidad_total_cadera = np.sqrt(velocidad_cadera_x**2 + velocidad_cadera_y**2)
-        energia_cinetica_cadera = calcular_energia_cinetica(peso_persona, velocidad_total_cadera)
+        energia_cinetica_cadera = calcular_energia_cinetica(masa, velocidad_total_cadera)
         df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Cinetica(Cadera)"] = energia_cinetica_cadera
 
     # Escribir el frame procesado en el video de salida

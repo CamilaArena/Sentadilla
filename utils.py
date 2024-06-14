@@ -70,7 +70,7 @@ def aceleracion_instantanea(vel_actual_x, vel_anterior_x, vel_actual_y, vel_ante
 
 
 #--------------FUNCIONES PARA ENERGIA------------------
-def calcular_energia_potencial(masa, altura, g=9.8):
+def calcular_energia_potencial(masa, altura, g):
     return masa * g * altura
 
 def calcular_energia_cinetica(masa, velocidad):
