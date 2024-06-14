@@ -67,3 +67,21 @@ def aceleracion_instantanea(vel_actual_x, vel_anterior_x, vel_actual_y, vel_ante
   dvx = vel_actual_x - vel_anterior_x
   dvy = vel_actual_y - vel_anterior_y
   return (dvx/tiempo, dvy/tiempo)
+
+
+#--------------FUNCIONES PARA ENERGIA------------------
+def calcular_energia_potencial(masa, altura, g=9.8):
+    return masa * g * altura
+
+def calcular_energia_cinetica(masa, velocidad):
+    return 0.5 * masa * velocidad ** 2
+
+def calcular_altura(df):
+    # El primer frame del video tiene la posicion inicial de la cadera 
+    altura_inicial = df.iloc[0]["LEFT_HIP_Y"]
+    # Encuentra la posición más alta del salto (maxima Y) de la cadera durante el movimiento
+    altura_max = df["LEFT_HIP_Y"].max()
+    # La altura total es la diferencia entre la posición inicial y la maxima
+    altura = altura_max - altura_inicial
+    return altura
+
