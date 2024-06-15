@@ -76,12 +76,4 @@ def calcular_energia_potencial(masa, altura, g):
 def calcular_energia_cinetica(masa, velocidad):
     return 0.5 * masa * velocidad ** 2
 
-def calcular_altura(df):
-    # El primer frame del video tiene la posicion inicial de la cadera 
-    altura_inicial = df.iloc[0]["LEFT_HIP_Y"]
-    # Encuentra la posición más alta del salto (maxima Y) de la cadera durante el movimiento
-    altura_max = df["LEFT_HIP_Y"].max()
-    # La altura total es la diferencia entre la posición inicial y la maxima
-    altura = altura_max - altura_inicial
-    return altura
-
+# Trabajo=energiamecanica.diff() --> sumatoria de todos --> trabajo total
