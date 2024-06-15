@@ -5,11 +5,13 @@ import mediapipe as mp
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from utils import *
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf.symbol_database')
 
 # Rutas
-video_path = '/Users/camia/Desktop/proyecto/lat_tincho.mov'
-output_video_path = '/Users/camia/Desktop/proyecto/tracked_video.mp4'
-output_csv_path = '/Users/camia/Desktop/proyecto/pose_data.csv'
+video_path = ["D:/Fisica/salto_lat2.mp4"]
+output_video_path = ["D:/Fisica/tracked_video.mp4"]
+output_csv_paths = ["D:/Fisica/pose_data.csv"]
 
 # Input usuario
 peso_persona = 65  # kg
@@ -39,7 +41,7 @@ columns.append("Energia Cinetica(Cadera)")
 columns.append("Energia Mecanica(Cadera)")
 
 # Código para recorrer frames del video y realizar cálculos
-cap = cv2.VideoCapture(video_path)
+cap = cv2.VideoCapture("D:/Fisica/salto_lat2.mp4")
 
 # Obtener propiedades del video
 video_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -50,9 +52,13 @@ tiempo_por_frame = 1 / video_fps
 # Inicializar DataFrame y pose para el video actual
 df_completo = pd.DataFrame(columns=columns)
 pose = mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5)
-video_writer = cv2.VideoWriter(output_video_path, cv2.VideoWriter_fourcc(*'mp4v'), video_fps, (video_width, video_height))
+video_writer = cv2.VideoWriter("D:/Fisica/tracked_video.mp4", cv2.VideoWriter_fourcc(*'mp4v'), video_fps, (video_width, video_height))
 
 frame_number = 0  # Reiniciar el contador de fotogramas para cada video
+
+altura_cadera_y_inicial = None
+altura_cadera_y_actual = None
+dfs = []
 
 # Procesar cada fotograma del video
 while cap.isOpened():
@@ -82,13 +88,15 @@ while cap.isOpened():
             pose_row[landmark.name + '_Y'] = None
             pose_row[landmark.name + '_Z'] = None
 
-    pose_row_df = pd.DataFrame(pose_row, index=[pose_row['frame_number']])
-    df_completo = pd.concat([df_completo, pose_row_df], ignore_index=True)
+    if frame_number == 63:
+        break
+
+    df_completo = pd.concat([df_completo, pd.DataFrame([pose_row])], ignore_index=True)
 
     # Agregar los landmarks al gráfico
     mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                              mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=5, circle_radius=5),
-                              mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=5, circle_radius=5))
+                              mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=5, circle_radius=3),
+                              mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=5, circle_radius=3))
 
     if frame_number > 0:
         df_completo.loc[df_completo["frame_number"] == frame_number, "Tiempo"] = tiempo_por_frame * frame_number
@@ -102,12 +110,20 @@ while cap.isOpened():
         df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_X"] = velocidad_cadera_x
         df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_Y"] = velocidad_cadera_y
 
-        # Calcula la altura maxima de la cadera en el video (altura max del salto)
-        altura_cadera = calcular_altura(df_completo)
+        # Altura = (altura_cadera_y_actual * altura_cadera_y_inicial)
+        # Esta linea es para interpolar "objetos" y evitar un warning 
+        df_completo = df_completo.infer_objects()
+        df_completo = df_completo.interpolate(method='linear', axis=0)
+
+        altura_cadera_y_inicial = df_completo.loc[0, 'LEFT_HIP_Y']
+        altura_cadera_y_actual = df_completo.loc[frame_number, 'LEFT_HIP_Y']
+    
+        altura = altura_cadera_y_inicial * altura_cadera_y_actual
         masa = peso_persona / 9.8
+        print("ALTURA CADERA: ", altura)
 
         # ENERGIA POTENCIAL
-        energia_potencial_cadera = calcular_energia_potencial(masa, altura_cadera, 9.8)
+        energia_potencial_cadera = calcular_energia_potencial(masa, altura, 9.8)
         df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Potencial(Cadera)"] = energia_potencial_cadera
 
         # ENERGIA CINETICA
@@ -128,15 +144,17 @@ pose.close()
 video_writer.release()
 cap.release()
 
-df_completo.to_csv(output_csv_path, index=False)
+#df_completo.iloc[63] = df_completo.iloc[63].interpolate(method='linear', axis=0)
+
+df_completo.to_csv("D:/Fisica/pose_data.csv", index=False)
 
 print("Proceso completado. Video trackeado guardado en:", output_video_path)
-print("Datos de la pose guardados en:", output_csv_path)
+print("Datos de la pose guardados en:", "D:/Fisica/pose_data.csv")
 
 #-----------------GRAFICOS-------------------
 
 # Código para graficar energías potencial, cinética y mecánica
-df_completo = pd.read_csv(output_csv_path)
+df_completo = pd.read_csv("D:/Fisica/pose_data.csv")
 
 # Suavizar las energías potencial, cinética y mecánica
 window_size = 50
