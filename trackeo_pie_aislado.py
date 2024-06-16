@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from utils import *
 from scipy.signal import savgol_filter
 
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf')
+
 # Initialize MediaPipe Pose
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_tracking_confidence=0.5)
@@ -14,7 +17,7 @@ pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_t
 mp_drawing = mp.solutions.drawing_utils
 
 # Read input video
-video_path = '/Users/valen/Downloads/Fisica/sentado2.mp4'
+video_path = '/Users/valen/Downloads/Fisica/caida_talon.MOV'
 cap = cv2.VideoCapture(video_path)
 
 # Get video properties
@@ -80,11 +83,11 @@ while cap.isOpened():
             pose_row[landmark.name + '_X'] = pos.x * (0.44/0.15116006135)
             pose_row[landmark.name + '_Y'] = pos.y * (0.46/0.26961168646)
 
-        # Draw landmarks
-        mp_drawing.draw_landmarks(
-            rgb_frame, 
-            result.pose_landmarks, 
-            mp_pose.POSE_CONNECTIONS)
+#        # Draw landmarks
+#        mp_drawing.draw_landmarks(
+#            rgb_frame, 
+#            result.pose_landmarks, 
+#            mp_pose.POSE_CONNECTIONS)
 
     df = pd.concat([df, pd.DataFrame([pose_row])], ignore_index=True)
     if(frame_index>0):
@@ -96,7 +99,6 @@ while cap.isOpened():
         angulo_actual = calculate_angle((pos_actual_left_knee[0], pos_actual_left_knee[1]), (pos_actual_left_ankle[0], pos_actual_left_ankle[1]), (pos_actual_left_heel[0], pos_actual_left_heel[1]))
         vel_angular = velocidad_angular(angulo_anterior, angulo_actual, tiempo_por_frame)
         df.loc[df["frame_number"] == frame_index, "VelocidadAngular"] = vel_angular
-
     # Convert back to BGR for video writing
     output_frame = cv2.cvtColor(rgb_frame, cv2.COLOR_RGB2BGR)
     
@@ -141,18 +143,55 @@ for i in range(0, frame_index-1):
 df_nuevo['AceleracionAngular'] = savgol_filter(df_nuevo['AceleracionAngular'], window_length=3, polyorder=2)
 df_nuevo.interpolate(method='linear',inplace=True)
 
-for i in range(1, frame_index-1):
+for i in range(0, frame_index-1):
     pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index = extraer_posiciones(df_nuevo, i, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL', 'LEFT_FOOT_INDEX')
-    vector_fuerza_gemelo = calcular_fuerza_gemelo(df_nuevo, i, pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index)
+    # Posiciones normalizadas para graficar en el video
+    pos_left_knee_normalizada, pos_left_ankle_normalizada, pos_left_heel_normalizada, pos_left_foot_index_normalizada = extraer_posiciones(df, i, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL', 'LEFT_FOOT_INDEX')
+    magnitud_fuerza_gemelo = calcular_fuerza_gemelo(df_nuevo, i, pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index)
     #magnitud_fuerza = (vector_fuerza_gemelo[0]**2 + vector_fuerza_gemelo[1]**2)**0.5
-    df_nuevo.loc[df_nuevo["frame_number"] == i, "FuerzaGemelo"] = vector_fuerza_gemelo
-    #graficar_vector_fuerza(rgb_frame,vector_fuerza_gemelo,pos_left_ankle,output_width,output_height)
-df_nuevo['FuerzaGemelo'] = savgol_filter(df_nuevo['FuerzaGemelo'], window_length=3, polyorder=2)
+    df_nuevo.loc[df_nuevo["frame_number"] == i, "FuerzaGemelo"] = magnitud_fuerza_gemelo
+
+df_nuevo['FuerzaGemelo'] = savgol_filter(df_nuevo['FuerzaGemelo'], window_length=10, polyorder=2)
+df_nuevo.interpolate(method='linear',inplace=True)
 df_nuevo.to_csv(csv_file_path, index=False)
 
-# Release resources
 cap.release()
-pose.close()
 out.release()
+
+# Read input video
+video_path = '/Users/valen/Downloads/Fisica/caida_talon.MOV'
+cap2 = cv2.VideoCapture(video_path)
+# Prepare output video
+out2 = cv2.VideoWriter('/Users/valen/Downloads/Fisica/tracked_pie_sentado2.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (output_width, output_height))
+
+# Recorrer el video para dibujar el vector fuerza gemelo
+frame_index = 0
+while cap2.isOpened():
+    ret, frame = cap2.read()
+    if not ret:
+        break
+
+    # Resize the frame for faster processing
+    resized_frame = cv2.resize(frame, (output_width, output_height))
+    # Convert the frame to RGB
+    rgb_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
+    #cv2.circle(rgb_frame, (int(40) , int(40)) , 20, (255,0,255), -1,3)
+    #cv2.circle(rgb_frame, (int(0.5 * output_width) , int(0.5 * output_height)) , 20, (255,0,255), -1,3)
+    pos_left_knee, pos_left_ankle = extraer_posiciones(df_nuevo, frame_index, 'LEFT_KNEE', 'LEFT_ANKLE')
+    magnitud_fuerza_gemelo = df_nuevo.loc[df_nuevo["frame_number"] == frame_index, "FuerzaGemelo"].iloc[0]
+    graficar_vector_fuerza(rgb_frame,magnitud_fuerza_gemelo,pos_left_ankle,pos_left_knee,output_width,output_height)
+    
+    # Convert back to BGR for video writing
+    output_frame = cv2.cvtColor(rgb_frame, cv2.COLOR_RGB2BGR)
+    
+    # Write the frame to the output video
+    out2.write(output_frame)
+    
+    frame_index += 1
+
+# Release resources
+cap2.release()
+pose.close()
+out2.release()
 
 cv2.destroyAllWindows()

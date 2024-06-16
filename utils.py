@@ -92,6 +92,14 @@ def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_
   # Al vector fuerza gemelo lo multiplico por la fuerza que realiza este y lo devuelvo
   return magnitud_fuerza_gemelo #(vector_fuerza_gemelo_unitario[0] * magnitud_fuerza_gemelo, vector_fuerza_gemelo_unitario[1] * magnitud_fuerza_gemelo)
 
-def graficar_vector_fuerza(image, vector_fuerza, pos_left_ankle, video_width, video_height):
-  cv2.circle(image, (int(pos_left_ankle[0] * video_width) , int(pos_left_ankle[1] * video_height)) , 20, (255,0,255), -1,3)
-  cv2.arrowedLine(image, (int(pos_left_ankle[0] * video_width) , int(pos_left_ankle[1] * video_height)) , (int(vector_fuerza[0]* video_width) , int(vector_fuerza[1]* video_height) ) , (255,0,0), 4)
+def graficar_vector_fuerza(image, magnitud_fuerza_gemelo, pos_left_ankle, pos_left_knee, video_width, video_height):
+  normalized_pos_left_ankle = (pos_left_ankle[0] * 0.15116006135 / 0.44, pos_left_ankle[1] * 0.26961168646 / 0.46)
+  normalized_pos_left_knee = (pos_left_knee[0] * 0.15116006135 / 0.44, pos_left_knee[1] * 0.26961168646 / 0.46)
+  vector = (normalized_pos_left_knee[0] - normalized_pos_left_ankle[0], normalized_pos_left_knee[1] - normalized_pos_left_ankle[1])
+  
+  distancia_vector_pixeles = ((vector[0] * video_width)**2 + (vector[1] * video_height)**2)**0.5
+  
+  versor = ((vector[0] * video_width) / distancia_vector_pixeles, (vector[1] * video_height) /distancia_vector_pixeles)
+  
+  cv2.arrowedLine(image, (int(normalized_pos_left_ankle[0] * video_width) , int(normalized_pos_left_ankle[1] * video_height)) , (int(versor[0] * magnitud_fuerza_gemelo + normalized_pos_left_ankle[0] * video_width) , int(versor[1] * magnitud_fuerza_gemelo + normalized_pos_left_ankle[1] * video_height)) , (255,0,0), 4)
+  
