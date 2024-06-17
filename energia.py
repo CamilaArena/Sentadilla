@@ -15,7 +15,9 @@ output_csv_paths = ["D:/Fisica/pose_data.csv"]
 
 # Input usuario
 peso_persona = 65  # kg
-altura_persona = 176  # cm
+altura_persona = 1.76  # m
+longitud_brazo_x = 0.65 # m --> 0.22330
+longitud_pierna_y = 0.94 # m --> 0.550944
 
 # Crear columnas del dataframe
 mp_drawing = mp.solutions.drawing_utils
@@ -79,15 +81,19 @@ while cap.isOpened():
 
         # Por cada articulacion, guarda en su posicion de X, Y, Z el resultado
         for landmark in articulaciones:
-            pose_row[landmark.name + '_X'] = landmarks[landmark].x
-            pose_row[landmark.name + '_Y'] = landmarks[landmark].y
-            pose_row[landmark.name + '_Z'] = landmarks[landmark].z
-    else:
-        for landmark in articulaciones:
-            pose_row[landmark.name + '_X'] = None
-            pose_row[landmark.name + '_Y'] = None
-            pose_row[landmark.name + '_Z'] = None
+            pos = landmarks[landmark]
 
+            #print("pos x:", pos.x)
+            #print("video_width: ", video_width)
+            #pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x/video_width)
+            #pose_row[landmark.name + '_Y'] = pos.y * (longitud_pierna_y/video_height)
+
+            pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x/0.22330)
+            pose_row[landmark.name + '_Y'] = pos.y * (longitud_pierna_y/0.55094)
+
+            #pose_row[landmark.name + '_Y'] = landmarks[landmark].y
+            #pose_row[landmark.name + '_Z'] = landmarks[landmark].z    
+ 
     if frame_number == 63:
         break
 
@@ -112,13 +118,15 @@ while cap.isOpened():
 
         # Altura = (altura_cadera_y_actual * altura_cadera_y_inicial)
         # Esta linea es para interpolar "objetos" y evitar un warning 
-        df_completo = df_completo.infer_objects()
-        df_completo = df_completo.interpolate(method='linear', axis=0)
+        #df_completo = df_completo.infer_objects()
+        #df_completo = df_completo.interpolate(method='linear', axis=0)
 
         altura_cadera_y_inicial = df_completo.loc[0, 'LEFT_HIP_Y']
+        #print("altura_inicial_Cadera: ",altura_cadera_y_inicial)
         altura_cadera_y_actual = df_completo.loc[frame_number, 'LEFT_HIP_Y']
-    
-        altura = altura_cadera_y_inicial * altura_cadera_y_actual
+        #print("altura_actual_Cadera: ",altura_cadera_y_actual)
+
+        altura = altura_cadera_y_actual - altura_cadera_y_inicial
         masa = peso_persona / 9.8
         print("ALTURA CADERA: ", altura)
 
