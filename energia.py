@@ -106,7 +106,7 @@ video_writer.release()
 cap.release()
 
 # Aplicar suavizado de Savitzky-Golay a las posiciones
-window_length = 11  # Debe ser un número impar
+window_length = 11 
 polyorder = 2
 
 df_completo['LEFT_HIP_X'] = savgol_filter(df_completo['LEFT_HIP_X'], window_length, polyorder)
@@ -127,7 +127,7 @@ for frame_number in range(1, len(df_completo)):
     altura_cadera_y_inicial = df_completo.loc[0, 'LEFT_HIP_Y']
     altura_cadera_y_actual = df_completo.loc[frame_number, 'LEFT_HIP_Y']
 
-    altura = altura_cadera_y_actual - altura_cadera_y_inicial
+    altura = ((1 - altura_cadera_y_actual) - (1 - altura_cadera_y_inicial)) * (longitud_pierna_y/0.55094) #altura normalizada e invertida
     masa = peso_persona / 9.8
 
     # ENERGIA POTENCIAL
@@ -172,11 +172,22 @@ fig_energias.add_trace(trace_energia_potencial, row=1, col=1)
 fig_energias.add_trace(trace_energia_cinetica, row=1, col=1)
 fig_energias.add_trace(trace_energia_mecanica, row=1, col=1)
 
+# Configurar los ejes Y para ajustar la escala de la energía cinética
+max_cinetica = max(energia_cinetica_smoothed)
+max_potencial = max(energia_potencial_smoothed)
+min_potencial = min(energia_potencial_smoothed)
+
+# Aumentar la escala de la energía cinética
+if max_cinetica > max_potencial:
+    fig_energias.update_yaxes(range=[min_potencial, 1.2 * max_cinetica], row=1, col=1)
+else:
+    fig_energias.update_yaxes(range=[min_potencial, 1.2 * max_potencial], row=1, col=1)
+
 # Actualizar el diseño de la figura
 fig_energias.update_layout(
     title='Energía Potencial, Cinética y Mecánica de la Cadera',
     xaxis=dict(title='Tiempo'),
-    yaxis=dict(title='Energía (Joules)'),
+    yaxis=dict(title='Energía (Joules)'), 
     legend=dict(x=0.7, y=1.1),
     height=600,
     width=800
@@ -196,7 +207,7 @@ fig_velocidades.add_trace(trace_velocidad_y, row=1, col=1)
 fig_velocidades.update_layout(
     title='Velocidad de la Cadera en X e Y',
     xaxis=dict(title='Tiempo'),
-    yaxis=dict(title='Velocidad (m/s)'),
+    yaxis=dict(title='Velocidad (m/s)'), 
     legend=dict(x=0.7, y=1.1),
     height=600,
     width=800
