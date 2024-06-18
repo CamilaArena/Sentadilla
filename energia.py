@@ -4,6 +4,7 @@ import pandas as pd
 import mediapipe as mp
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from scipy.signal import savgol_filter
 from utils import *
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf.symbol_database')
@@ -16,8 +17,8 @@ output_csv_path = '/Users/camia/Desktop/proyecto/pose_data.csv'
 # Input usuario
 peso_persona = 65  # kg
 altura_persona = 1.76  # m
-longitud_brazo_x = 0.65 # m --> 0.22330 px
-longitud_pierna_y = 0.94 # m --> 0.550944 px
+longitud_brazo_x = 0.65  # m --> 0.22330 px
+longitud_pierna_y = 0.94  # m --> 0.550944 px
 
 # Crear columnas del dataframe
 mp_drawing = mp.solutions.drawing_utils
@@ -60,7 +61,6 @@ frame_number = 0  # Reiniciar el contador de fotogramas para cada video
 
 altura_cadera_y_inicial = None
 altura_cadera_y_actual = None
-dfs = []
 
 # Procesar cada fotograma del video
 while cap.isOpened():
@@ -83,8 +83,8 @@ while cap.isOpened():
         for landmark in articulaciones:
             pos = landmarks[landmark]
 
-            pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x/0.22330)
-            pose_row[landmark.name + '_Y'] = pos.y * (longitud_pierna_y/0.55094)
+            pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x / 0.22330)
+            pose_row[landmark.name + '_Y'] = pos.y * (longitud_pierna_y / 0.55094)
 
     df_completo = pd.concat([df_completo, pd.DataFrame([pose_row])], ignore_index=True)
 
@@ -95,34 +95,6 @@ while cap.isOpened():
 
     if frame_number > 0:
         df_completo.loc[df_completo["frame_number"] == frame_number, "Tiempo"] = tiempo_por_frame * frame_number
-        previous_frame = frame_number - 1
-
-        pos_prev_left_hip = (df_completo.loc[previous_frame, 'LEFT_HIP_X'], df_completo.loc[previous_frame, 'LEFT_HIP_Y'])
-        pos_actual_left_hip = (df_completo.loc[frame_number, 'LEFT_HIP_X'], df_completo.loc[frame_number, 'LEFT_HIP_Y'])
-
-        # VELOCIDAD
-        velocidad_cadera_x, velocidad_cadera_y = velocidad_instantanea(pos_prev_left_hip, pos_actual_left_hip, tiempo_por_frame)
-        df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_X"] = velocidad_cadera_x
-        df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_Y"] = velocidad_cadera_y
-
-        altura_cadera_y_inicial = df_completo.loc[0, 'LEFT_HIP_Y']
-        altura_cadera_y_actual = df_completo.loc[frame_number, 'LEFT_HIP_Y']
-
-        altura = altura_cadera_y_actual - altura_cadera_y_inicial
-        masa = peso_persona / 9.8
-
-        # ENERGIA POTENCIAL
-        energia_potencial_cadera = calcular_energia_potencial(masa, altura, 9.8)
-        df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Potencial(Cadera)"] = energia_potencial_cadera
-
-        # ENERGIA CINETICA
-        velocidad_total_cadera = np.sqrt((velocidad_cadera_x)**2 + (velocidad_cadera_y)**2)
-        energia_cinetica_cadera = calcular_energia_cinetica(masa, abs(velocidad_total_cadera))
-        df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Cinetica(Cadera)"] = energia_cinetica_cadera
-
-        # ENERGIA MECANICA
-        energia_mecanica_cadera = energia_potencial_cadera + energia_cinetica_cadera
-        df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Mecanica(Cadera)"] = energia_mecanica_cadera
 
     # Escribir el frame procesado en el video de salida
     video_writer.write(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
@@ -133,19 +105,61 @@ pose.close()
 video_writer.release()
 cap.release()
 
+# Aplicar suavizado de Savitzky-Golay a las posiciones
+window_length = 11  # Debe ser un número impar
+polyorder = 2
+
+df_completo['LEFT_HIP_X'] = savgol_filter(df_completo['LEFT_HIP_X'], window_length, polyorder)
+df_completo['LEFT_HIP_Y'] = savgol_filter(df_completo['LEFT_HIP_Y'], window_length, polyorder)
+
+# Calcular las velocidades nuevamente después del suavizado
+for frame_number in range(1, len(df_completo)):
+    previous_frame = frame_number - 1
+
+    pos_prev_left_hip = (df_completo.loc[previous_frame, 'LEFT_HIP_X'], df_completo.loc[previous_frame, 'LEFT_HIP_Y'])
+    pos_actual_left_hip = (df_completo.loc[frame_number, 'LEFT_HIP_X'], df_completo.loc[frame_number, 'LEFT_HIP_Y'])
+
+    # VELOCIDAD
+    velocidad_cadera_x, velocidad_cadera_y = velocidad_instantanea(pos_prev_left_hip, pos_actual_left_hip, tiempo_por_frame)
+    df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_X"] = velocidad_cadera_x
+    df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_Y"] = velocidad_cadera_y
+
+    altura_cadera_y_inicial = df_completo.loc[0, 'LEFT_HIP_Y']
+    altura_cadera_y_actual = df_completo.loc[frame_number, 'LEFT_HIP_Y']
+
+    altura = altura_cadera_y_actual - altura_cadera_y_inicial
+    masa = peso_persona / 9.8
+
+    # ENERGIA POTENCIAL
+    energia_potencial_cadera = calcular_energia_potencial(masa, altura, 9.8)
+    df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Potencial(Cadera)"] = energia_potencial_cadera
+
+    # ENERGIA CINETICA
+    velocidad_total_cadera = np.sqrt((velocidad_cadera_x) ** 2 + (velocidad_cadera_y) ** 2)
+    energia_cinetica_cadera = calcular_energia_cinetica(masa, abs(velocidad_total_cadera))
+    df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Cinetica(Cadera)"] = energia_cinetica_cadera
+
+    # ENERGIA MECANICA
+    energia_mecanica_cadera = energia_potencial_cadera + energia_cinetica_cadera
+    df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Mecanica(Cadera)"] = energia_mecanica_cadera
+
+# Aplicar suavizado de Savitzky-Golay a las velocidades
+df_completo['Velocidad(Cadera)_X'] = savgol_filter(df_completo['Velocidad(Cadera)_X'], window_length, polyorder)
+df_completo['Velocidad(Cadera)_Y'] = savgol_filter(df_completo['Velocidad(Cadera)_Y'], window_length, polyorder)
+
 df_completo.to_csv(output_csv_path, index=False)
 
 print("Proceso completado. Video trackeado guardado en:", output_video_path)
 print("Datos de la pose guardados en:", output_csv_path)
 
+
 #-----------------GRAFICOS-------------------
 df_completo = pd.read_csv(output_csv_path)
 
-# Suavizar las energías potencial, cinética y mecánica 
-window_size = 10
-energia_potencial_smoothed = df_completo['Energia Potencial(Cadera)'].rolling(window=window_size).mean()
-energia_cinetica_smoothed = df_completo['Energia Cinetica(Cadera)'].rolling(window=window_size).mean()
-energia_mecanica_smoothed = df_completo['Energia Mecanica(Cadera)'].rolling(window=window_size).mean()
+# Suavizar las energías potencial, cinética y mecánica
+energia_potencial_smoothed = savgol_filter(df_completo['Energia Potencial(Cadera)'], window_length, polyorder)
+energia_cinetica_smoothed = savgol_filter(df_completo['Energia Cinetica(Cadera)'], window_length, polyorder)
+energia_mecanica_smoothed = savgol_filter(df_completo['Energia Mecanica(Cadera)'], window_length, polyorder)
 
 # Crear trazas para las energías
 trace_energia_potencial = go.Scatter(x=df_completo['Tiempo'], y=energia_potencial_smoothed, mode='lines', name='Energía Potencial de la Cadera', line=dict(color='blue'))
