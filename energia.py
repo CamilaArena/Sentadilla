@@ -124,7 +124,7 @@ for frame_number in range(1, len(df_completo)):
     df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_X"] = velocidad_cadera_x
     df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_Y"] = velocidad_cadera_y
 
-    altura_cadera_y_inicial = df_completo.loc[0, 'LEFT_HIP_Y']
+    altura_cadera_y_inicial = df_completo.loc[previous_frame, 'LEFT_HIP_Y']
     altura_cadera_y_actual = df_completo.loc[frame_number, 'LEFT_HIP_Y']
 
     altura = ((1 - altura_cadera_y_actual) - (1 - altura_cadera_y_inicial)) * (longitud_pierna_y/0.55094) #altura normalizada e invertida
@@ -154,6 +154,17 @@ print("Datos de la pose guardados en:", output_csv_path)
 
 
 #-----------------GRAFICOS-------------------
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import pandas as pd
+from scipy.signal import savgol_filter
+
+# Parámetros de suavizado
+window_length = 11
+polyorder = 2
+
+# Leer el archivo CSV con los datos
+output_csv_path = '/Users/camia/Desktop/proyecto/pose_data.csv'
 df_completo = pd.read_csv(output_csv_path)
 
 # Suavizar las energías potencial, cinética y mecánica
@@ -172,16 +183,8 @@ fig_energias.add_trace(trace_energia_potencial, row=1, col=1)
 fig_energias.add_trace(trace_energia_cinetica, row=1, col=1)
 fig_energias.add_trace(trace_energia_mecanica, row=1, col=1)
 
-# Configurar los ejes Y para ajustar la escala de la energía cinética
-max_cinetica = max(energia_cinetica_smoothed)
-max_potencial = max(energia_potencial_smoothed)
-min_potencial = min(energia_potencial_smoothed)
-
-# Aumentar la escala de la energía cinética
-if max_cinetica > max_potencial:
-    fig_energias.update_yaxes(range=[min_potencial, 1.2 * max_cinetica], row=1, col=1)
-else:
-    fig_energias.update_yaxes(range=[min_potencial, 1.2 * max_potencial], row=1, col=1)
+# Invertir el eje Y de las energías potencial, cinética y mecánica
+fig_energias.update_yaxes(autorange='reversed', row=1, col=1)
 
 # Actualizar el diseño de la figura
 fig_energias.update_layout(
@@ -193,7 +196,7 @@ fig_energias.update_layout(
     width=800
 )
 
-# Mostrar la figura
+# Mostrar la figura de energías invertidas
 fig_energias.show()
 
 # Gráfica de las velocidades
