@@ -83,19 +83,8 @@ while cap.isOpened():
         for landmark in articulaciones:
             pos = landmarks[landmark]
 
-            #print("pos x:", pos.x)
-            #print("video_width: ", video_width)
-            #pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x/video_width)
-            #pose_row[landmark.name + '_Y'] = pos.y * (longitud_pierna_y/video_height)
-
             pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x/0.22330)
             pose_row[landmark.name + '_Y'] = pos.y * (longitud_pierna_y/0.55094)
-
-            #pose_row[landmark.name + '_Y'] = landmarks[landmark].y
-            #pose_row[landmark.name + '_Z'] = landmarks[landmark].z    
- 
-    if frame_number == 63:
-        break
 
     df_completo = pd.concat([df_completo, pd.DataFrame([pose_row])], ignore_index=True)
 
@@ -116,27 +105,19 @@ while cap.isOpened():
         df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_X"] = velocidad_cadera_x
         df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_Y"] = velocidad_cadera_y
 
-        # Altura = (altura_cadera_y_actual * altura_cadera_y_inicial)
-        # Esta linea es para interpolar "objetos" y evitar un warning 
-        #df_completo = df_completo.infer_objects()
-        #df_completo = df_completo.interpolate(method='linear', axis=0)
-
         altura_cadera_y_inicial = df_completo.loc[0, 'LEFT_HIP_Y']
-        #print("altura_inicial_Cadera: ",altura_cadera_y_inicial)
         altura_cadera_y_actual = df_completo.loc[frame_number, 'LEFT_HIP_Y']
-        #print("altura_actual_Cadera: ",altura_cadera_y_actual)
 
         altura = altura_cadera_y_actual - altura_cadera_y_inicial
         masa = peso_persona / 9.8
-        print("ALTURA CADERA: ", altura)
 
         # ENERGIA POTENCIAL
         energia_potencial_cadera = calcular_energia_potencial(masa, altura, 9.8)
         df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Potencial(Cadera)"] = energia_potencial_cadera
 
         # ENERGIA CINETICA
-        velocidad_total_cadera = np.sqrt(velocidad_cadera_x**2 + velocidad_cadera_y**2) #modulo de la vel, para contemplar toda la velocidad, solo en x o y
-        energia_cinetica_cadera = calcular_energia_cinetica(masa, velocidad_total_cadera)
+        velocidad_total_cadera = np.sqrt((velocidad_cadera_x)**2 + (velocidad_cadera_y)**2)
+        energia_cinetica_cadera = calcular_energia_cinetica(masa, abs(velocidad_total_cadera))
         df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Cinetica(Cadera)"] = energia_cinetica_cadera
 
         # ENERGIA MECANICA
@@ -152,14 +133,14 @@ pose.close()
 video_writer.release()
 cap.release()
 
-#df_completo.iloc[63] = df_completo.iloc[63].interpolate(method='linear', axis=0)
-
 df_completo.to_csv(output_csv_path, index=False)
 
 print("Proceso completado. Video trackeado guardado en:", output_video_path)
 print("Datos de la pose guardados en:", output_csv_path)
 
 #-----------------GRAFICOS-------------------
+df_completo = pd.read_csv(output_csv_path)
+
 # Suavizar las energías potencial, cinética y mecánica 
 window_size = 10
 energia_potencial_smoothed = df_completo['Energia Potencial(Cadera)'].rolling(window=window_size).mean()
@@ -189,3 +170,22 @@ fig_energias.update_layout(
 
 # Mostrar la figura
 fig_energias.show()
+
+# Gráfica de las velocidades
+trace_velocidad_x = go.Scatter(x=df_completo['Tiempo'], y=df_completo['Velocidad(Cadera)_X'], mode='lines', name='Velocidad en X', line=dict(color='purple'))
+trace_velocidad_y = go.Scatter(x=df_completo['Tiempo'], y=df_completo['Velocidad(Cadera)_Y'], mode='lines', name='Velocidad en Y', line=dict(color='orange'))
+
+fig_velocidades = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1)
+fig_velocidades.add_trace(trace_velocidad_x, row=1, col=1)
+fig_velocidades.add_trace(trace_velocidad_y, row=1, col=1)
+
+fig_velocidades.update_layout(
+    title='Velocidad de la Cadera en X e Y',
+    xaxis=dict(title='Tiempo'),
+    yaxis=dict(title='Velocidad (m/s)'),
+    legend=dict(x=0.7, y=1.1),
+    height=600,
+    width=800
+)
+
+fig_velocidades.show()
