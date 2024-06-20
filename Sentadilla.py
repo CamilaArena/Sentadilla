@@ -11,9 +11,21 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf.symbol_database')
 
 # # Rutas
-video_paths = ["D:/Fisica/lat_tincho.mov"]
-output_video_paths = ["D:/Fisica/tracked_video.mp4"]
-output_csv_paths = ["D:/Fisica/pose_data.csv"]
+video_paths = [
+    '/Users/camia/Desktop/proyecto/lat_tincho.mov',
+    '/Users/camia/Desktop/proyecto/sentadilla_lateral.mp4',
+    #'/Users/camia/Desktop/proyecto/test.mp4',
+]
+output_csv_paths = [
+    '/Users/camia/Desktop/proyecto/pose_data.csv',
+    '/Users/camia/Desktop/proyecto/pose_data2.csv'
+    #'/Users/camia/Desktop/proyecto/pose_data3.csv'
+]
+output_video_paths = [
+    '/Users/camia/Desktop/proyecto/tracked_video.mp4',
+    '/Users/camia/Desktop/proyecto/tracked_video2.mp4'
+    #'/Users/camia/Desktop/proyecto/tracked_video3.mp4'
+]
 
 # # Input usuario
 peso_persona = 65 #kg
@@ -396,33 +408,35 @@ for i, video_path in enumerate(video_paths):
 # # Gráficos
 
 # %%
-
 # Variables para almacenar trazas de velocidad y aceleración de todos los videos
 all_vel_traces = []
 all_acc_traces = []
 all_pos_traces = []
 
+# Obtener la duración del video más corto
+min_duration = min(pd.read_csv(csv_path)['Tiempo'].max() for csv_path in output_csv_paths)
+
 for i, csv_path in enumerate(output_csv_paths):
     df_completo = pd.read_csv(csv_path)
+    df_completo['Tiempo'] = df_completo['Tiempo'] * (min_duration / df_completo['Tiempo'].max())
     
     window_size = 50
     left_hip_y_smoothed = df_completo['LEFT_HIP_Y'].rolling(window=window_size).mean()
     left_knee_y_smoothed = df_completo['LEFT_KNEE_Y'].rolling(window=window_size).mean()
 
     #------------POSICIONES DE CADERA Y RODILLA----------------------
-    trace1 = go.Scatter(x=df_completo.index, y=left_hip_y_smoothed, mode='lines', name=f'Altura de la cadera (Video {i+1})', line=dict(color='blue'))
-    trace2 = go.Scatter(x=df_completo.index, y=left_knee_y_smoothed, mode='lines', name=f'Posición de la rodilla (Video {i+1})', line=dict(color='red'))
+    trace1 = go.Scatter(x=df_completo['Tiempo'], y=left_hip_y_smoothed, mode='lines', name=f'Altura de la cadera (Video {i+1})', line=dict(color='blue'))
+    trace2 = go.Scatter(x=df_completo['Tiempo'], y=left_knee_y_smoothed, mode='lines', name=f'Posición de la rodilla (Video {i+1})', line=dict(color='red'))
 
     fig_posiciones = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1)
     fig_posiciones.add_trace(trace1, row=1, col=1)
     fig_posiciones.add_trace(trace2, row=1, col=1)
-    fig_posiciones.update_xaxes(range=[0, df_completo.index.max()])
+    fig_posiciones.update_xaxes(range=[0, min_duration])
 
     fig_posiciones.update_layout(
         title=f'Evolución de la posición de la cadera y la rodilla con respecto al tiempo (Video {i+1})',
         xaxis=dict(title='Tiempo'),
         yaxis=dict(title='Posición', autorange='reversed'),  # Invertir eje Y
-        yaxis2=dict(title='Posición', autorange='reversed'),  # Invertir eje Y
         legend=dict(x=0.7, y=1.1),
         height=600,
         width=800
@@ -449,7 +463,7 @@ for i, csv_path in enumerate(output_csv_paths):
 fig_pos = go.Figure()
 for trace in all_pos_traces:
     fig_pos.add_trace(trace)
-fig_pos.update_xaxes(title_text='Tiempo')
+fig_pos.update_xaxes(title_text='Tiempo', range=[0, min_duration])
 fig_pos.update_yaxes(title_text='Posición de la cadera')
 fig_pos.update_layout(title='Posición de la cadera en todos los videos')
 fig_pos.show()
@@ -458,7 +472,7 @@ fig_pos.show()
 fig_velocidad = go.Figure()
 for trace in all_vel_traces:
     fig_velocidad.add_trace(trace)
-fig_velocidad.update_xaxes(title_text='Tiempo')
+fig_velocidad.update_xaxes(title_text='Tiempo', range=[0, min_duration])
 fig_velocidad.update_yaxes(title_text='Velocidad de la cadera')
 fig_velocidad.update_layout(title='Velocidad de la cadera en todos los videos')
 fig_velocidad.show()
@@ -467,7 +481,7 @@ fig_velocidad.show()
 fig_aceleracion = go.Figure()
 for trace in all_acc_traces:
     fig_aceleracion.add_trace(trace)
-fig_aceleracion.update_xaxes(title_text='Tiempo')
+fig_aceleracion.update_xaxes(title_text='Tiempo', range=[0, min_duration])
 fig_aceleracion.update_yaxes(title_text='Aceleración de la cadera')
 fig_aceleracion.update_layout(title='Aceleración de la cadera en todos los videos')
 fig_aceleracion.show()
