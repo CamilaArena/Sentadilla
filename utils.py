@@ -83,18 +83,24 @@ def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_
   # Obtengo la aceleracion angular del dataframe
   aceleracionAngular = df.loc[df["frame_number"] == frame_number, "AceleracionAngular"].iloc[0]
   # Obtengo angulo entre la rodilla, tobillo, talon y lo paso a radianes para calcular el sen
-  angulo = calculate_angle(pos_left_knee,pos_left_ankle,pos_left_heel)
-  angulo_radianes = math.radians(angulo)
-  # Calculo el momento de fuerza generado en el tobillo
-  magnitud_fuerza_gemelo = ((1/2 * masa_pie * distancia_pie**2) * aceleracionAngular) / (distancia_momento * math.sin(angulo_radianes))
+  angulo_gemelo_talon = calculate_angle(pos_left_knee, pos_left_ankle, pos_left_heel)
+  angulo_gemelo_radianes = math.radians(angulo_gemelo_talon)
+  # Obtengo el angulo entre el talon, tobillo y un punto que pertenezca al vector fuerza mg
+  # Este punto lo obtengo a partir de la posicion en x del talon y la posicion y del talon - x cantidad
+  angulo_peso_talon = calculate_angle((pos_left_ankle[0],pos_left_ankle[1]-3), pos_left_ankle, pos_left_heel)
+  angulo_peso_talon_radianes = math.radians(angulo_peso_talon)
+  # Calculo la fuerza que realiza el gemelo
+  #magnitud_fuerza_gemelo = -(((1/2 * masa_pie * distancia_pie**2) * aceleracionAngular - (65 * distancia_momento * math.sin(angulo_peso_talon_radianes)) ) / (distancia_momento * math.sin(angulo_gemelo_radianes)))
+  magnitud_fuerza_gemelo = abs((-(1/2 * masa_pie * distancia_pie**2 * aceleracionAngular) + (65 * distancia_momento * math.sin(angulo_peso_talon_radianes))) / (distancia_momento * math.sin(angulo_gemelo_radianes)))
   # Vector fuerza gemelo es el vector unitario que va desde el tobillo a la rodilla
   vector_fuerza_gemelo_unitario = (pos_left_knee[0] - pos_left_ankle[0], pos_left_knee[1] - pos_left_ankle[1]) / ((pos_left_ankle[0]-pos_left_knee[0])**2 + (pos_left_ankle[1]-pos_left_knee[1])**2)**0.5
   # Al vector fuerza gemelo lo multiplico por la fuerza que realiza este y lo devuelvo
   return magnitud_fuerza_gemelo #(vector_fuerza_gemelo_unitario[0] * magnitud_fuerza_gemelo, vector_fuerza_gemelo_unitario[1] * magnitud_fuerza_gemelo)
 
-def graficar_vector_fuerza(image, magnitud_fuerza_gemelo, pos_left_ankle, pos_left_knee, video_width, video_height):
-  normalized_pos_left_ankle = (pos_left_ankle[0] * 0.15116006135 / 0.44, pos_left_ankle[1] * 0.26961168646 / 0.46)
-  normalized_pos_left_knee = (pos_left_knee[0] * 0.15116006135 / 0.44, pos_left_knee[1] * 0.26961168646 / 0.46)
+def graficar_vector_fuerza(image, magnitud_fuerza_gemelo, pos_left_ankle, pos_left_knee, pos_left_heel, video_width, video_height):
+  normalized_pos_left_ankle = (pos_left_ankle[0] * 0.15116006135 / 0.44, 1-(pos_left_ankle[1] * 0.26961168646 / 0.46))
+  normalized_pos_left_knee = (pos_left_knee[0] * 0.15116006135 / 0.44, 1-(pos_left_knee[1] * 0.26961168646 / 0.46))
+  normalized_pos_left_heel = (pos_left_heel[0] * 0.15116006135 / 0.44, 1-(pos_left_heel[1] * 0.26961168646 / 0.46))
   vector = (normalized_pos_left_knee[0] - normalized_pos_left_ankle[0], normalized_pos_left_knee[1] - normalized_pos_left_ankle[1])
   
   distancia_vector_pixeles = ((vector[0] * video_width)**2 + (vector[1] * video_height)**2)**0.5
@@ -102,4 +108,5 @@ def graficar_vector_fuerza(image, magnitud_fuerza_gemelo, pos_left_ankle, pos_le
   versor = ((vector[0] * video_width) / distancia_vector_pixeles, (vector[1] * video_height) /distancia_vector_pixeles)
   
   cv2.arrowedLine(image, (int(normalized_pos_left_ankle[0] * video_width) , int(normalized_pos_left_ankle[1] * video_height)) , (int(versor[0] * magnitud_fuerza_gemelo + normalized_pos_left_ankle[0] * video_width) , int(versor[1] * magnitud_fuerza_gemelo + normalized_pos_left_ankle[1] * video_height)) , (255,0,0), 4)
+  cv2.arrowedLine(image, (int(normalized_pos_left_heel[0] * video_width) , int(normalized_pos_left_heel[1] * video_height)) , (int(versor[0] * magnitud_fuerza_gemelo + normalized_pos_left_heel[0] * video_width) , int(versor[1] * magnitud_fuerza_gemelo + normalized_pos_left_heel[1] * video_height)) , (0,255,0), 4)
   
