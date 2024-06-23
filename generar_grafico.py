@@ -25,6 +25,6 @@ def generar_grafico_csv(ruta_csv, columna):
 
 # Ejemplo de uso
 ruta_csv_nuevo = '/Users/valen/Downloads/Fisica/landmarks.csv'
-columna = 'VelocidadAngular'
+columna = 'FuerzaGemelo'
 
 generar_grafico_csv(ruta_csv_nuevo, columna)

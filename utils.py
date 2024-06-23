@@ -2,7 +2,8 @@ import numpy as np
 import math
 import cv2
 
-
+longitud_brazo_x = 0.65  # m --> 0.22330 px
+longitud_pierna_y = 0.94  # m --> 0.550944 px
 
 def calculate_angle(a, b, c):
   return np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
@@ -98,9 +99,9 @@ def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_
   return magnitud_fuerza_gemelo #(vector_fuerza_gemelo_unitario[0] * magnitud_fuerza_gemelo, vector_fuerza_gemelo_unitario[1] * magnitud_fuerza_gemelo)
 
 def graficar_vector_fuerza(image, magnitud_fuerza_gemelo, pos_left_ankle, pos_left_knee, pos_left_heel, video_width, video_height):
-  normalized_pos_left_ankle = (pos_left_ankle[0] * 0.15116006135 / 0.44, 1-(pos_left_ankle[1] * 0.26961168646 / 0.46))
-  normalized_pos_left_knee = (pos_left_knee[0] * 0.15116006135 / 0.44, 1-(pos_left_knee[1] * 0.26961168646 / 0.46))
-  normalized_pos_left_heel = (pos_left_heel[0] * 0.15116006135 / 0.44, 1-(pos_left_heel[1] * 0.26961168646 / 0.46))
+  normalized_pos_left_ankle = (pos_left_ankle[0] * 0.22330 / longitud_brazo_x, 1-(pos_left_ankle[1] * 0.55094 / longitud_pierna_y))
+  normalized_pos_left_knee = (pos_left_knee[0] * 0.22330 / longitud_brazo_x, 1-(pos_left_knee[1] * 0.55094 / longitud_pierna_y))
+  normalized_pos_left_heel = (pos_left_heel[0] * 0.22330 / longitud_brazo_x, 1-(pos_left_heel[1] * 0.55094 / longitud_pierna_y))
   vector = (normalized_pos_left_knee[0] - normalized_pos_left_ankle[0], normalized_pos_left_knee[1] - normalized_pos_left_ankle[1])
   
   distancia_vector_pixeles = ((vector[0] * video_width)**2 + (vector[1] * video_height)**2)**0.5

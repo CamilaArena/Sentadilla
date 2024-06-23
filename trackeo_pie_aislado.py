@@ -17,7 +17,7 @@ pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_t
 mp_drawing = mp.solutions.drawing_utils
 
 # Read input video
-video_path = '/Users/valen/Downloads/Fisica/caida_talon.MOV'
+video_path = '/Users/valen/Downloads/Fisica/salto2.MP4'
 cap = cv2.VideoCapture(video_path)
 
 # Get video properties
@@ -27,6 +27,9 @@ fps = cap.get(cv2.CAP_PROP_FPS)
 tiempo_por_frame = 1/fps
 
 print(frame_width, frame_height, fps)
+
+longitud_brazo_x = 0.65  # m --> 0.22330 px
+longitud_pierna_y = 0.94  # m --> 0.550944 px
 
 # Define output video resolution (e.g., half of original)
 output_width = frame_width // 2
@@ -52,7 +55,7 @@ columns.append("AceleracionAngular")
 columns.append("FuerzaGemelo")
 
 # Prepare output video
-out = cv2.VideoWriter('/Users/valen/Downloads/Fisica/tracked_pie_sentado.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (output_width, output_height))
+out = cv2.VideoWriter('/Users/valen/Downloads/Fisica/tracked_salto.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (output_width, output_height))
 
 # Prepare CSV file for landmark data
 csv_file_path = '/Users/valen/Downloads/Fisica/landmarks.csv'
@@ -80,8 +83,8 @@ while cap.isOpened():
         # Extract landmark positions
         for landmark in articulaciones:
             pos = landmarks[landmark]
-            pose_row[landmark.name + '_X'] = pos.x * (0.44/0.15116006135)
-            pose_row[landmark.name + '_Y'] = (1-pos.y) * (0.46/0.26961168646)
+            pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x / 0.22330)#pos.x * (0.44/0.15116006135)
+            pose_row[landmark.name + '_Y'] = (1-pos.y) * (longitud_pierna_y / 0.55094) #(1-pos.y) * (0.46/0.26961168646)
 
 #        # Draw landmarks
 #        mp_drawing.draw_landmarks(
@@ -159,10 +162,10 @@ cap.release()
 out.release()
 
 # Read input video
-video_path = '/Users/valen/Downloads/Fisica/caida_talon.MOV'
+video_path = '/Users/valen/Downloads/Fisica/salto2.MP4'
 cap2 = cv2.VideoCapture(video_path)
 # Prepare output video
-out2 = cv2.VideoWriter('/Users/valen/Downloads/Fisica/tracked_pie_sentado2.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (output_width, output_height))
+out2 = cv2.VideoWriter('/Users/valen/Downloads/Fisica/tracked_salto2.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (output_width, output_height))
 
 # Recorrer el video para dibujar el vector fuerza gemelo
 frame_index = 0
