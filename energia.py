@@ -10,9 +10,9 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf.symbol_database')
 
 # Rutas
-video_path = '/Users/camia/Desktop/proyecto/salto.mp4'
-output_video_path = '/Users/camia/Desktop/proyecto/tracked_video.mp4'
-output_csv_path = '/Users/camia/Desktop/proyecto/pose_data.csv'
+video_path = 'D:/Fisica/salto.mp4'
+output_video_path = 'D:/Fisica/tracked_video.mp4'
+output_csv_path = 'D:/Fisica/pose_data.csv'
 
 # Input usuario
 peso_persona = 65  # kg
@@ -84,7 +84,7 @@ while cap.isOpened():
             pos = landmarks[landmark]
 
             pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x / 0.22330)
-            pose_row[landmark.name + '_Y'] = pos.y * (longitud_pierna_y / 0.55094)
+            pose_row[landmark.name + '_Y'] = (1 - pos.y) * (longitud_pierna_y / 0.55094)
 
     df_completo = pd.concat([df_completo, pd.DataFrame([pose_row])], ignore_index=True)
 
@@ -127,7 +127,7 @@ for frame_number in range(1, len(df_completo)):
     altura_cadera_y_inicial = df_completo.loc[previous_frame, 'LEFT_HIP_Y']
     altura_cadera_y_actual = df_completo.loc[frame_number, 'LEFT_HIP_Y']
 
-    altura = ((1 - altura_cadera_y_actual) - (1 - altura_cadera_y_inicial)) * (longitud_pierna_y/0.55094) #altura normalizada e invertida
+    altura = (altura_cadera_y_actual) - (altura_cadera_y_inicial)
     masa = peso_persona / 9.8
 
     # ENERGIA POTENCIAL
@@ -164,7 +164,7 @@ window_length = 11
 polyorder = 2
 
 # Leer el archivo CSV con los datos
-output_csv_path = '/Users/camia/Desktop/proyecto/pose_data.csv'
+output_csv_path = 'D:/Fisica/pose_data.csv'
 df_completo = pd.read_csv(output_csv_path)
 
 # Suavizar las energías potencial, cinética y mecánica
