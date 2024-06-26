@@ -75,5 +75,3 @@ def calcular_energia_potencial(masa, altura, g):
 
 def calcular_energia_cinetica(masa, velocidad):
     return 0.5 * masa * (velocidad ** 2)
-
-# Trabajo=energiamecanica.diff() --> sumatoria de todos --> trabajo total

@@ -42,6 +42,7 @@ columns.append("Velocidad(Cadera)_Y")
 columns.append("Energia Potencial(Cadera)")
 columns.append("Energia Cinetica(Cadera)")
 columns.append("Energia Mecanica(Cadera)")
+columns.append("Trabajo")
 
 # Código para recorrer frames del video y realizar cálculos
 cap = cv2.VideoCapture(video_path)
@@ -142,6 +143,14 @@ for frame_number in range(1, len(df_completo)):
     # ENERGIA MECANICA
     energia_mecanica_cadera = energia_potencial_cadera + energia_cinetica_cadera
     df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Mecanica(Cadera)"] = energia_mecanica_cadera
+    
+    # TRABAJO
+    trabajo = df_completo['Energia Mecanica(Cadera)'].diff()
+    df_completo.loc[df_completo["frame_number"] == frame_number, "Trabajo"] = trabajo   # --> PASARLO a CALORIAS
+    trabajo_total = trabajo.sum()
+    trabajo_total_calorias = trabajo_total / 4.184 # aca ya esta en calorias xq 1 caloria son 4.184 joules
+    print(trabajo_total_calorias)
+    # Trabajo=energiamecanica.diff() --> sumatoria de todos --> trabajo total --> pasarlo a calorias
 
 # Aplicar suavizado de Savitzky-Golay a las velocidades
 df_completo['Velocidad(Cadera)_X'] = savgol_filter(df_completo['Velocidad(Cadera)_X'], window_length, polyorder)
