@@ -78,7 +78,7 @@ def aceleracion_instantanea(vel_actual_x, vel_anterior_x, vel_actual_y, vel_ante
 def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index):
   # Masa del pie, esta masa es el 1.5% del peso total de la persona
   masa_pie = 0.015 * (65 / 9.8) 
-  distancia_pie = ((pos_left_heel[0]-pos_left_foot_index[0])**2 + (pos_left_heel[1]-pos_left_foot_index[1])**2)**0.5
+  longitud_pie = ((pos_left_heel[0]-pos_left_foot_index[0])**2 + (pos_left_heel[1]-pos_left_foot_index[1])**2)**0.5
   # Distancia desde el tobillo a donde se aplica la fuerza, es decir, talon.
   distancia_momento = ((pos_left_heel[0]-pos_left_ankle[0])**2 + (pos_left_heel[1]-pos_left_ankle[1])**2)**0.5
   # Obtengo la aceleracion angular del dataframe
@@ -90,9 +90,13 @@ def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_
   # Este punto lo obtengo a partir de la posicion en x del talon y la posicion y del talon - x cantidad
   angulo_peso_talon = calculate_angle((pos_left_ankle[0],pos_left_ankle[1]-3), pos_left_ankle, pos_left_heel)
   angulo_peso_talon_radianes = math.radians(angulo_peso_talon)
+  # Distancia desde el centro del pie al tobillo para teorema de Steiner
+  distancia_al_centro = 1
+  # Momento inercial
+  momento_inercial = (1/12 * masa_pie * longitud_pie**2) + (masa_pie * distancia_al_centro**2)
   # Calculo la fuerza que realiza el gemelo
   #magnitud_fuerza_gemelo = -(((1/2 * masa_pie * distancia_pie**2) * aceleracionAngular - (65 * distancia_momento * math.sin(angulo_peso_talon_radianes)) ) / (distancia_momento * math.sin(angulo_gemelo_radianes)))
-  magnitud_fuerza_gemelo = abs((-(1/2 * masa_pie * distancia_pie**2 * aceleracionAngular) + (65 * distancia_momento * math.sin(angulo_peso_talon_radianes))) / (distancia_momento * math.sin(angulo_gemelo_radianes)))
+  magnitud_fuerza_gemelo = abs((-(momento_inercial * aceleracionAngular) + (65 * distancia_momento * math.sin(angulo_peso_talon_radianes))) / (distancia_momento * math.sin(angulo_gemelo_radianes)))
   # Vector fuerza gemelo es el vector unitario que va desde el tobillo a la rodilla
   vector_fuerza_gemelo_unitario = (pos_left_knee[0] - pos_left_ankle[0], pos_left_knee[1] - pos_left_ankle[1]) / ((pos_left_ankle[0]-pos_left_knee[0])**2 + (pos_left_ankle[1]-pos_left_knee[1])**2)**0.5
   # Al vector fuerza gemelo lo multiplico por la fuerza que realiza este y lo devuelvo
