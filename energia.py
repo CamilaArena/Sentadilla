@@ -10,9 +10,9 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf.symbol_database')
 
 # Rutas
-video_path = 'D:/Fisica/salto.mp4'
-output_video_path = 'D:/Fisica/tracked_video.mp4'
-output_csv_path = 'D:/Fisica/pose_data.csv'
+video_path = '/Users/valen/Downloads/Fisica/salto2.MP4'
+output_video_path = '/Users/valen/Downloads/Fisica/tracked_video.mp4'
+output_csv_path = '/Users/valen/Downloads/Fisica/pose_data.csv'
 
 # Input usuario
 peso_persona = 65  # kg
@@ -147,11 +147,11 @@ for frame_number in range(1, len(df_completo)):
         df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Mecanica(Cadera)"] = energia_mecanica_cadera
         
         # TRABAJO
-        trabajo = df_completo['Energia Mecanica(Cadera)'].diff()
+        trabajo = df_completo['Energia Mecanica(Cadera)'].diff() #Estaba mecanica
         df_completo.loc[df_completo["frame_number"] == frame_number, "Trabajo"] = trabajo   # --> PASARLO a CALORIAS
-        trabajo_total = trabajo.sum()
-        trabajo_total_calorias = trabajo_total / 4.184 # aca ya esta en calorias xq 1 caloria son 4.184 joules
-        
+        #trabajo_total = trabajo.sum()
+        #trabajo_total_calorias = trabajo_total / 4.184 # aca ya esta en calorias xq 1 caloria son 4.184 joules
+        #print(trabajo_total_calorias)
         # Trabajo=energiamecanica.diff() --> sumatoria de todos --> trabajo total --> pasarlo a calorias
 
 # print(trabajo_total_calorias)
@@ -176,27 +176,30 @@ window_length = 11
 polyorder = 2
 
 # Leer el archivo CSV con los datos
-output_csv_path = 'D:/Fisica/pose_data.csv'
+output_csv_path = '/Users/valen/Downloads/Fisica/pose_data.csv'
 df_completo = pd.read_csv(output_csv_path)
 
 # Suavizar las energías potencial, cinética y mecánica
 energia_potencial_smoothed = savgol_filter(df_completo['Energia Potencial(Cadera)'], window_length, polyorder)
 energia_cinetica_smoothed = savgol_filter(df_completo['Energia Cinetica(Cadera)'], window_length, polyorder)
 energia_mecanica_smoothed = savgol_filter(df_completo['Energia Mecanica(Cadera)'], window_length, polyorder)
+trabajo_smoothed = savgol_filter(df_completo['Trabajo'], window_length, polyorder)
 
 # Crear trazas para las energías
 trace_energia_potencial = go.Scatter(x=df_completo['Tiempo'], y=energia_potencial_smoothed, mode='lines', name='Energía Potencial de la Cadera', line=dict(color='blue'))
 trace_energia_cinetica = go.Scatter(x=df_completo['Tiempo'], y=energia_cinetica_smoothed, mode='lines', name='Energía Cinética de la Cadera', line=dict(color='red'))
 trace_energia_mecanica = go.Scatter(x=df_completo['Tiempo'], y=energia_mecanica_smoothed, mode='lines', name='Energía Mecánica de la Cadera', line=dict(color='green'))
+trace_trabajo = go.Scatter(x=df_completo['Tiempo'], y=trabajo_smoothed, mode='lines', name='Trabajo', line=dict(color='purple'))
 
 # Crear la figura con subplots
 fig_energias = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1)
 fig_energias.add_trace(trace_energia_potencial, row=1, col=1)
 fig_energias.add_trace(trace_energia_cinetica, row=1, col=1)
 fig_energias.add_trace(trace_energia_mecanica, row=1, col=1)
+fig_energias.add_trace(trace_trabajo, row=1, col=1)
 
 # Invertir el eje Y de las energías potencial, cinética y mecánica
-fig_energias.update_yaxes(autorange='reversed', row=1, col=1)
+#fig_energias.update_yaxes(autorange='reversed', row=1, col=1)
 
 # Actualizar el diseño de la figura
 fig_energias.update_layout(
