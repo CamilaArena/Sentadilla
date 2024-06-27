@@ -125,33 +125,36 @@ for frame_number in range(1, len(df_completo)):
     df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_X"] = velocidad_cadera_x
     df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_Y"] = velocidad_cadera_y
 
-    altura_cadera_y_inicial = df_completo.loc[previous_frame, 'LEFT_HIP_Y']
-    altura_cadera_y_actual = df_completo.loc[frame_number, 'LEFT_HIP_Y']
+    if frame_number > 28:
 
-    altura = (altura_cadera_y_actual) - (altura_cadera_y_inicial)
-    masa = peso_persona / 9.8
+        altura_cadera_y_inicial = df_completo.loc[0, 'LEFT_HIP_Y']
+        altura_cadera_y_actual = df_completo.loc[frame_number, 'LEFT_HIP_Y']
 
-    # ENERGIA POTENCIAL
-    energia_potencial_cadera = calcular_energia_potencial(masa, altura, 9.8)
-    df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Potencial(Cadera)"] = energia_potencial_cadera
+        altura = (altura_cadera_y_actual) - (altura_cadera_y_inicial)
+        masa = peso_persona / 9.8
 
-    # ENERGIA CINETICA
-    velocidad_total_cadera = np.sqrt((velocidad_cadera_x) ** 2 + (velocidad_cadera_y) ** 2)
-    energia_cinetica_cadera = calcular_energia_cinetica(masa, abs(velocidad_total_cadera))
-    df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Cinetica(Cadera)"] = energia_cinetica_cadera
+        # ENERGIA POTENCIAL
+        energia_potencial_cadera = calcular_energia_potencial(masa, altura, 9.8)
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Potencial(Cadera)"] = energia_potencial_cadera
 
-    # ENERGIA MECANICA
-    energia_mecanica_cadera = energia_potencial_cadera + energia_cinetica_cadera
-    df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Mecanica(Cadera)"] = energia_mecanica_cadera
-    
-    # TRABAJO
-    trabajo = df_completo['Energia Mecanica(Cadera)'].diff()
-    df_completo.loc[df_completo["frame_number"] == frame_number, "Trabajo"] = trabajo   # --> PASARLO a CALORIAS
-    trabajo_total = trabajo.sum()
-    trabajo_total_calorias = trabajo_total / 4.184 # aca ya esta en calorias xq 1 caloria son 4.184 joules
-    print(trabajo_total_calorias)
-    # Trabajo=energiamecanica.diff() --> sumatoria de todos --> trabajo total --> pasarlo a calorias
+        # ENERGIA CINETICA
+        velocidad_total_cadera = np.sqrt((velocidad_cadera_x) ** 2 + (velocidad_cadera_y) ** 2)
+        energia_cinetica_cadera = calcular_energia_cinetica(masa, abs(velocidad_total_cadera))
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Cinetica(Cadera)"] = energia_cinetica_cadera
 
+        # ENERGIA MECANICA
+        energia_mecanica_cadera = energia_potencial_cadera + energia_cinetica_cadera
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Energia Mecanica(Cadera)"] = energia_mecanica_cadera
+        
+        # TRABAJO
+        trabajo = df_completo['Energia Mecanica(Cadera)'].diff()
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Trabajo"] = trabajo   # --> PASARLO a CALORIAS
+        trabajo_total = trabajo.sum()
+        trabajo_total_calorias = trabajo_total / 4.184 # aca ya esta en calorias xq 1 caloria son 4.184 joules
+        
+        # Trabajo=energiamecanica.diff() --> sumatoria de todos --> trabajo total --> pasarlo a calorias
+
+# print(trabajo_total_calorias)
 # Aplicar suavizado de Savitzky-Golay a las velocidades
 df_completo['Velocidad(Cadera)_X'] = savgol_filter(df_completo['Velocidad(Cadera)_X'], window_length, polyorder)
 df_completo['Velocidad(Cadera)_Y'] = savgol_filter(df_completo['Velocidad(Cadera)_Y'], window_length, polyorder)
