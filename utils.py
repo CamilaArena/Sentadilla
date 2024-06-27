@@ -91,7 +91,7 @@ def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_
   angulo_peso_talon = calculate_angle((pos_left_ankle[0],pos_left_ankle[1]-3), pos_left_ankle, pos_left_heel)
   angulo_peso_talon_radianes = math.radians(angulo_peso_talon)
   # Distancia desde el centro del pie al tobillo para teorema de Steiner
-  distancia_al_centro = 1
+  distancia_al_centro = 0.08
   # Momento inercial
   momento_inercial = (1/12 * masa_pie * longitud_pie**2) + (masa_pie * distancia_al_centro**2)
   # Calculo la fuerza que realiza el gemelo
