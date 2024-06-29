@@ -6,17 +6,17 @@ longitud_brazo_x = 0.65  # m --> 0.22330 px
 longitud_pierna_y = 0.94  # m --> 0.550944 px
 
 def calculate_angle(a, b, c):
-  return np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
-  """
+  #return np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
+  radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
   #El ángulo calculado se convierte de radianes a grados y se toma el valor absoluto --> Grados = Radianes * 180 / π
   angle = np.abs(radians*180.0/np.pi)
 
   #Se normaliza el ángulo calculado para asegurarse de que esté en el rango de 0 a 180 grados.
   if angle>180.0:
-  #angle = 360-angle
-
-  return angle
-  """
+    angle = 360-angle
+  # Lo retorno como radianes
+  return angle * np.pi / 180.0
+  
 
 # formato output:([[x1, y1, z1], [x2, y2, z2], [x3, y3, z3]]).
 def extraer_posiciones(df, frame_number, *articulaciones):
@@ -63,6 +63,7 @@ def velocidad_angular(angulo_inicial, angulo_final, delta_tiempo):
     # Donde Delta theta es el cambio en rotación angular y Delta t es el cambio en el tiempo
     # ENTONCES: la velocidad angular se calcula dividiendo la diferencia total del ángulo (delta_theta) por el tiempo transcurrido entre las mediciones (1 / frame_rate).
     angular_velocity = delta_theta / delta_tiempo
+    
     return angular_velocity
 
 def velocidad_instantanea(pos_anterior, pos_actual, tiempo):
@@ -85,18 +86,14 @@ def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_
   aceleracionAngular = df.loc[df["frame_number"] == frame_number, "AceleracionAngular"].iloc[0]
   # Obtengo angulo entre la rodilla, tobillo, talon y lo paso a radianes para calcular el sen
   angulo_gemelo_talon = calculate_angle(pos_left_knee, pos_left_ankle, pos_left_heel)
-  angulo_gemelo_radianes = math.radians(angulo_gemelo_talon)
-  # Obtengo el angulo entre el talon, tobillo y un punto que pertenezca al vector fuerza mg
-  # Este punto lo obtengo a partir de la posicion en x del talon y la posicion y del talon - x cantidad
-  angulo_peso_talon = calculate_angle((pos_left_ankle[0],pos_left_ankle[1]-3), pos_left_ankle, pos_left_heel)
-  angulo_peso_talon_radianes = math.radians(angulo_peso_talon)
+  # Obtengo el angulo que se forma entre la punta del pie, tobillo, y un punto en la direccion del peso
+  angulo_peso = calculate_angle(pos_left_foot_index, pos_left_ankle, (pos_left_ankle[0],pos_left_ankle[1]-1))
   # Distancia desde el centro del pie al tobillo para teorema de Steiner
-  distancia_al_centro = 0.08
+  distancia_al_centro = 0.08  
   # Momento inercial
   momento_inercial = (1/12 * masa_pie * longitud_pie**2) + (masa_pie * distancia_al_centro**2)
   # Calculo la fuerza que realiza el gemelo
-  #magnitud_fuerza_gemelo = -(((1/2 * masa_pie * distancia_pie**2) * aceleracionAngular - (65 * distancia_momento * math.sin(angulo_peso_talon_radianes)) ) / (distancia_momento * math.sin(angulo_gemelo_radianes)))
-  magnitud_fuerza_gemelo = abs((-(momento_inercial * aceleracionAngular) + (65 * distancia_momento * math.sin(angulo_peso_talon_radianes))) / (distancia_momento * math.sin(angulo_gemelo_radianes)))
+  magnitud_fuerza_gemelo = abs((-(momento_inercial * aceleracionAngular) + (65 * distancia_al_centro * math.sin(angulo_peso))) / (distancia_momento * math.sin(angulo_gemelo_talon)))
   # Vector fuerza gemelo es el vector unitario que va desde el tobillo a la rodilla
   vector_fuerza_gemelo_unitario = (pos_left_knee[0] - pos_left_ankle[0], pos_left_knee[1] - pos_left_ankle[1]) / ((pos_left_ankle[0]-pos_left_knee[0])**2 + (pos_left_ankle[1]-pos_left_knee[1])**2)**0.5
   # Al vector fuerza gemelo lo multiplico por la fuerza que realiza este y lo devuelvo
