@@ -28,8 +28,8 @@ tiempo_por_frame = 1/fps
 
 print(frame_width, frame_height, fps)
 
-longitud_brazo_x = 0.65  # m --> 0.22330 px
-longitud_pierna_y = 0.94  # m --> 0.550944 px
+longitud_brazo_x = 0.65  # m --> 0.22330 px, 0.4873590171 - 0.8088152409 = 0.3214562238
+longitud_pierna_y = 0.94  # m --> 0.550944 px, 0.5937613547- 0.3447620273 = 0.2489993274
 
 # Define output video resolution (e.g., half of original)
 output_width = frame_width // 2
@@ -41,7 +41,9 @@ articulaciones = [
     mp_pose.PoseLandmark.LEFT_HEEL,
     mp_pose.PoseLandmark.LEFT_FOOT_INDEX,
     mp_pose.PoseLandmark.LEFT_KNEE,
-    mp_pose.PoseLandmark.LEFT_HIP
+    mp_pose.PoseLandmark.LEFT_HIP,
+    mp_pose.PoseLandmark.LEFT_INDEX,
+    mp_pose.PoseLandmark.LEFT_SHOULDER
 ]
 
 columns = ['frame_number']
@@ -83,14 +85,14 @@ while cap.isOpened():
         # Extract landmark positions
         for landmark in articulaciones:
             pos = landmarks[landmark]
-            pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x / 0.22330)#pos.x * (0.44/0.15116006135)
-            pose_row[landmark.name + '_Y'] = (1-pos.y) * (longitud_pierna_y / 0.55094) #(1-pos.y) * (0.46/0.26961168646)
+            pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x / 0.3214562238)#pos.x * (0.44/0.15116006135)
+            pose_row[landmark.name + '_Y'] = (1-pos.y) * (longitud_pierna_y / 0.2489993274) #(1-pos.y) * (0.46/0.26961168646)
 
-#        # Draw landmarks
-#        mp_drawing.draw_landmarks(
-#            rgb_frame, 
-#            result.pose_landmarks, 
-#            mp_pose.POSE_CONNECTIONS)
+        # Draw landmarks
+        mp_drawing.draw_landmarks(
+            rgb_frame, 
+            result.pose_landmarks, 
+            mp_pose.POSE_CONNECTIONS)
 
     df = pd.concat([df, pd.DataFrame([pose_row])], ignore_index=True)
     if(frame_index>0):
@@ -113,13 +115,14 @@ while cap.isOpened():
 # create new dataframe with smoothed data
 df_nuevo = pd.DataFrame(columns=columns)
 df_nuevo['frame_number'] = df['frame_number']
-
+0.4873590171 - 0.8088152409
 columnas_a_suavizar = [
     'LEFT_ANKLE_X', 'LEFT_ANKLE_Y',
     'LEFT_HEEL_X', 'LEFT_HEEL_Y',
     'LEFT_FOOT_INDEX_X', 'LEFT_FOOT_INDEX_Y',
     'LEFT_KNEE_X', 'LEFT_KNEE_Y',
-    'LEFT_HIP_X', 'LEFT_HIP_Y'
+    'LEFT_HIP_X', 'LEFT_HIP_Y','LEFT_INDEX_X','LEFT_INDEX_Y',
+    'LEFT_SHOULDER_X','LEFT_SHOULDER_Y'
 ]
 
 # Aplicar el filtro Savitzky-Golay a cada columna
@@ -178,6 +181,8 @@ while cap2.isOpened():
     resized_frame = cv2.resize(frame, (output_width, output_height))
     # Convert the frame to RGB
     rgb_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
+    tiempo = round(frame_index * tiempo_por_frame,2)
+    cv2.putText(rgb_frame, "Tiempo:"+ str(tiempo),(20,50),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
     #cv2.circle(rgb_frame, (int(40) , int(40)) , 20, (255,0,255), -1,3)
     #cv2.circle(rgb_frame, (int(0.5 * output_width) , int(0.5 * output_height)) , 20, (255,0,255), -1,3)
     pos_left_knee, pos_left_ankle, pos_left_heel = extraer_posiciones(df_nuevo, frame_index, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL')
