@@ -334,7 +334,7 @@ for i, video_path in enumerate(video_paths):
             # Por cada articulacion, guarda en su posicion de X, Y, Z el resultado
             for landmark in articulaciones:
                 pose_row[landmark.name + '_X'] = landmarks[landmark].x
-                pose_row[landmark.name + '_Y'] = landmarks[landmark].y
+                pose_row[landmark.name + '_Y'] = 1 - landmarks[landmark].y
                 pose_row[landmark.name + '_Z'] = landmarks[landmark].z
         else:
             for landmark in articulaciones:
@@ -436,7 +436,7 @@ for i, csv_path in enumerate(output_csv_paths):
     fig_posiciones.update_layout(
         title=f'Evolución de la posición de la cadera y la rodilla con respecto al tiempo (Video {i+1})',
         xaxis=dict(title='Tiempo'),
-        yaxis=dict(title='Posición', autorange='reversed'),  # Invertir eje Y
+        yaxis=dict(title='Posición'),  # Invertir eje Y
         legend=dict(x=0.7, y=1.1),
         height=600,
         width=800
