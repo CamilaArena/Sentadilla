@@ -401,6 +401,11 @@ for i, video_path in enumerate(video_paths):
     video_writer.release()
     cap.release()
 
+    window_length = 11 
+    polyorder = 2
+    df_completo['Velocidad(Cadera)_Y'] = savgol_filter(df_completo['Velocidad(Cadera)_Y'], window_length, polyorder)
+    df_completo['Aceleracion(Cadera)_Y'] = savgol_filter(df_completo['Aceleracion(Cadera)_Y'], window_length, polyorder)
+
     df_completo.to_csv(output_csv_paths[i], index=False)
 
     print("Proceso completado. Videos trackeados guardados en:", output_video_paths[i])
