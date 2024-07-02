@@ -12,18 +12,18 @@ warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf.
 
 # # Rutas
 video_paths = [
-    '/Users/camia/Desktop/proyecto/lat_tincho.mov',
-    '/Users/camia/Desktop/proyecto/sentadilla_lateral.mp4',
+    'D:/Fisica/lat_tincho.mov',
+    'D:/Fisica/sentadilla_lateral.mp4',
     #'/Users/camia/Desktop/proyecto/test.mp4',
 ]
 output_csv_paths = [
-    '/Users/camia/Desktop/proyecto/pose_data.csv',
-    '/Users/camia/Desktop/proyecto/pose_data2.csv'
+    'D:/Fisica/pose_data.csv',
+    'D:/Fisica/pose_data2.csv'
     #'/Users/camia/Desktop/proyecto/pose_data3.csv'
 ]
 output_video_paths = [
-    '/Users/camia/Desktop/proyecto/tracked_video.mp4',
-    '/Users/camia/Desktop/proyecto/tracked_video2.mp4'
+    'D:/Fisica/tracked_video.mp4',
+    'D:/Fisica/tracked_video2.mp4'
     #'/Users/camia/Desktop/proyecto/tracked_video3.mp4'
 ]
 
@@ -31,6 +31,9 @@ output_video_paths = [
 peso_persona = 65 #kg
 altura_persona = 176 #cm
 peso_pesa = 140 #kg
+
+cadera_a_rodilla = 0.52 #m
+cadera_a_tobillo = 1.04 #m
 
 # # Crear columnas del dataframe
 # Procesa el video y almacena los datos de las poses. Define las columnas para un DataFrame donde se guardarán las coordenadas de las articulaciones detectadas en cada cuadro del video.
@@ -333,8 +336,8 @@ for i, video_path in enumerate(video_paths):
 
             # Por cada articulacion, guarda en su posicion de X, Y, Z el resultado
             for landmark in articulaciones:
-                pose_row[landmark.name + '_X'] = landmarks[landmark].x
-                pose_row[landmark.name + '_Y'] = 1 - landmarks[landmark].y
+                pose_row[landmark.name + '_X'] = landmarks[landmark].x * (cadera_a_tobillo / 0.14076531)
+                pose_row[landmark.name + '_Y'] = (1 - landmarks[landmark].y) * (cadera_a_rodilla / 0.20725557)
                 pose_row[landmark.name + '_Z'] = landmarks[landmark].z
         else:
             for landmark in articulaciones:
