@@ -42,8 +42,7 @@ columns.append("Velocidad(Cadera)_Y")
 columns.append("Energia Potencial(Cadera)")
 columns.append("Energia Cinetica(Cadera)")
 columns.append("Energia Mecanica(Cadera)")
-columns.append("TrabajoMecanica")
-columns.append("TrabajoCinetica")
+columns.append("Trabajo")
 
 # Código para recorrer frames del video y realizar cálculos
 cap = cv2.VideoCapture(video_path)
@@ -126,12 +125,13 @@ for frame_number in range(1, len(df_completo)):
     df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_X"] = velocidad_cadera_x
     df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_Y"] = velocidad_cadera_y
 
-    if frame_number > 28:
+    # Frame 24 es el punto mas bajo de la cadera
+    if frame_number > 24:
 
-        altura_cadera_y_inicial = df_completo.loc[0, 'LEFT_HIP_Y']
+        altura_cadera_y_inicial = df_completo.loc[24 , 'LEFT_HIP_Y']
         altura_cadera_y_actual = df_completo.loc[frame_number, 'LEFT_HIP_Y']
 
-        altura = (altura_cadera_y_actual) - (altura_cadera_y_inicial)
+        altura = altura_cadera_y_actual - altura_cadera_y_inicial
         masa = peso_persona / 9.8
 
         # ENERGIA POTENCIAL
@@ -149,10 +149,10 @@ for frame_number in range(1, len(df_completo)):
         
         # TRABAJO
         trabajo_mecanica = df_completo['Energia Mecanica(Cadera)'].diff()
-        df_completo.loc[df_completo["frame_number"] == frame_number, "TrabajoMecanica"] = trabajo_mecanica   # --> PASARLO a CALORIAS
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Trabajo"] = trabajo_mecanica   # --> PASARLO a CALORIAS
         
-        trabajo_cinetica = df_completo['Energia Cinetica(Cadera)'].diff()
-        df_completo.loc[df_completo["frame_number"] == frame_number, "TrabajoCinetica"] = trabajo_cinetica 
+        
+        
         #trabajo_total = trabajo.sum()
         #trabajo_total_calorias = trabajo_total / 4.184 # aca ya esta en calorias xq 1 caloria son 4.184 joules
         #print(trabajo_total_calorias)
@@ -187,16 +187,14 @@ df_completo = pd.read_csv(output_csv_path)
 energia_potencial_smoothed = savgol_filter(df_completo['Energia Potencial(Cadera)'], window_length, polyorder)
 energia_cinetica_smoothed = savgol_filter(df_completo['Energia Cinetica(Cadera)'], window_length, polyorder)
 energia_mecanica_smoothed = savgol_filter(df_completo['Energia Mecanica(Cadera)'], window_length, polyorder)
-trabajo_mecanica_smoothed = savgol_filter(df_completo['TrabajoMecanica'], window_length, polyorder)
-trabajo_cinetica_smoothed = savgol_filter(df_completo['TrabajoCinetica'], window_length, polyorder)
+trabajo_mecanica_smoothed = savgol_filter(df_completo['Trabajo'], window_length, polyorder)
 
 # Crear trazas para las energías
 trace_energia_potencial = go.Scatter(x=df_completo['Tiempo'], y=energia_potencial_smoothed, mode='lines', name='Energía Potencial de la Cadera', line=dict(color='blue'))
 trace_energia_cinetica = go.Scatter(x=df_completo['Tiempo'], y=energia_cinetica_smoothed, mode='lines', name='Energía Cinética de la Cadera', line=dict(color='red'))
 trace_energia_mecanica = go.Scatter(x=df_completo['Tiempo'], y=energia_mecanica_smoothed, mode='lines', name='Energía Mecánica de la Cadera', line=dict(color='green'))
 
-trace_trabajo_mecanica = go.Scatter(x=df_completo['Tiempo'], y=trabajo_mecanica_smoothed, mode='lines', name='Trabajo Mecanica', line=dict(color='purple'))
-trace_trabajo_cinetica = go.Scatter(x=df_completo['Tiempo'], y=trabajo_cinetica_smoothed, mode='lines', name='Trabajo Cinetica', line=dict(color='yellow'))
+trace_trabajo_mecanica = go.Scatter(x=df_completo['Tiempo'], y=trabajo_mecanica_smoothed, mode='lines', name='Trabajo', line=dict(color='purple'))
 
 # Crear la figura con subplots
 fig_energias = make_subplots(rows=1, cols=1, shared_xaxes=True, vertical_spacing=0.1)
@@ -204,7 +202,6 @@ fig_energias.add_trace(trace_energia_potencial, row=1, col=1)
 fig_energias.add_trace(trace_energia_cinetica, row=1, col=1)
 fig_energias.add_trace(trace_energia_mecanica, row=1, col=1)
 fig_energias.add_trace(trace_trabajo_mecanica, row=1, col=1)
-fig_energias.add_trace(trace_trabajo_cinetica, row=1, col=1)
 
 # Invertir el eje Y de las energías potencial, cinética y mecánica
 #fig_energias.update_yaxes(autorange='reversed', row=1, col=1)
