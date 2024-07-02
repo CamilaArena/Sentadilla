@@ -32,8 +32,8 @@ longitud_brazo_x = 0.65  # m --> 0.22330 px, 0.4873590171 - 0.8088152409 = 0.321
 longitud_pierna_y = 0.94  # m --> 0.550944 px, 0.5937613547- 0.3447620273 = 0.2489993274
 
 # Define output video resolution (e.g., half of original)
-output_width = frame_width // 2
-output_height = frame_height // 2
+output_width = frame_width
+output_height = frame_height
 
 # Defino cuales son las articulaciones que me interesa estudiar
 articulaciones = [
@@ -115,7 +115,7 @@ while cap.isOpened():
 # create new dataframe with smoothed data
 df_nuevo = pd.DataFrame(columns=columns)
 df_nuevo['frame_number'] = df['frame_number']
-0.4873590171 - 0.8088152409
+
 columnas_a_suavizar = [
     'LEFT_ANKLE_X', 'LEFT_ANKLE_Y',
     'LEFT_HEEL_X', 'LEFT_HEEL_Y',

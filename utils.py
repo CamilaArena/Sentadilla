@@ -110,5 +110,5 @@ def graficar_vector_fuerza(image, magnitud_fuerza_gemelo, pos_left_ankle, pos_le
   versor = ((vector[0] * video_width) / distancia_vector_pixeles, (vector[1] * video_height) /distancia_vector_pixeles)
   
   #cv2.arrowedLine(image, (int(normalized_pos_left_ankle[0] * video_width) , int(normalized_pos_left_ankle[1] * video_height)) , (int(versor[0] * magnitud_fuerza_gemelo + normalized_pos_left_ankle[0] * video_width) , int(versor[1] * magnitud_fuerza_gemelo + normalized_pos_left_ankle[1] * video_height)) , (255,0,0), 4)
-  cv2.arrowedLine(image, (int(normalized_pos_left_heel[0] * video_width) , int(normalized_pos_left_heel[1] * video_height)) , (int(versor[0] * magnitud_fuerza_gemelo + normalized_pos_left_heel[0] * video_width) , int(versor[1] * magnitud_fuerza_gemelo + normalized_pos_left_heel[1] * video_height)) , (0,255,0), 4)
+  cv2.arrowedLine(image, (int(normalized_pos_left_heel[0] * video_width) , int(normalized_pos_left_heel[1] * video_height)) , (int(versor[0] * (magnitud_fuerza_gemelo/2) + normalized_pos_left_heel[0] * video_width) , int(versor[1] * (magnitud_fuerza_gemelo/2) + normalized_pos_left_heel[1] * video_height)) , (0,255,0), 2)
   
