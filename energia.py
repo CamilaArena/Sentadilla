@@ -153,9 +153,9 @@ for frame_number in range(1, len(df_completo)):
         
         
         
-        #trabajo_total = trabajo.sum()
-        #trabajo_total_calorias = trabajo_total / 4.184 # aca ya esta en calorias xq 1 caloria son 4.184 joules
-        #print(trabajo_total_calorias)
+        trabajo_total = trabajo_mecanica.sum()
+        trabajo_total_calorias = trabajo_total / 4.184 # aca ya esta en calorias xq 1 caloria son 4.184 joules
+        print(trabajo_total_calorias)
         # Trabajo=energiamecanica.diff() --> sumatoria de todos --> trabajo total --> pasarlo a calorias
 
 # print(trabajo_total_calorias)
