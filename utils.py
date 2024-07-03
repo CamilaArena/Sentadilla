@@ -101,10 +101,7 @@ def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_
   # Momento del peso estatico
   momento_peso_estatico = 65 * distancia_al_centro * math.sin(0.6024579780018424)
   # Calculo la fuerza que realiza el gemelo
-  if(3 == 3):
-    magnitud_fuerza_gemelo = abs(((momento_inercial * aceleracionAngular) + momento_peso_movimiento - momento_peso_estatico) / (-distancia_momento * math.sin(angulo_gemelo_talon) + distancia_momento * math.sin(2.6741865548826484)))
-  else:
-    magnitud_fuerza_gemelo = 0
+  magnitud_fuerza_gemelo = abs(((momento_inercial * aceleracionAngular) + momento_peso_movimiento - momento_peso_estatico) / (-distancia_momento * math.sin(angulo_gemelo_talon) + distancia_momento * math.sin(2.6741865548826484)))
   # Vector fuerza gemelo es el vector unitario que va desde el tobillo a la rodilla
   vector_fuerza_gemelo_unitario = (pos_left_knee[0] - pos_left_ankle[0], pos_left_knee[1] - pos_left_ankle[1]) / ((pos_left_ankle[0]-pos_left_knee[0])**2 + (pos_left_ankle[1]-pos_left_knee[1])**2)**0.5
   # Al vector fuerza gemelo lo multiplico por la fuerza que realiza este y lo devuelvo
