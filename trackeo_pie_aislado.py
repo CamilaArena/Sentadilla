@@ -181,13 +181,13 @@ while cap2.isOpened():
     resized_frame = cv2.resize(frame, (output_width, output_height))
     # Convert the frame to RGB
     rgb_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
-    tiempo = round(frame_index * tiempo_por_frame,2)
+    tiempo = round(frame_index,2)
     cv2.putText(rgb_frame, "Tiempo:"+ str(tiempo),(20,50),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
     #cv2.circle(rgb_frame, (int(40) , int(40)) , 20, (255,0,255), -1,3)
     #cv2.circle(rgb_frame, (int(0.5 * output_width) , int(0.5 * output_height)) , 20, (255,0,255), -1,3)
     pos_left_knee, pos_left_ankle, pos_left_heel = extraer_posiciones(df_nuevo, frame_index, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL')
     magnitud_fuerza_gemelo = df_nuevo.loc[df_nuevo["frame_number"] == frame_index, "FuerzaGemelo"].iloc[0]
-    graficar_vector_fuerza(rgb_frame,magnitud_fuerza_gemelo,pos_left_ankle,pos_left_knee,pos_left_heel,output_width,output_height)
+    #graficar_vector_fuerza(rgb_frame,magnitud_fuerza_gemelo,pos_left_ankle,pos_left_knee,pos_left_heel,output_width,output_height)
     
     # Convert back to BGR for video writing
     output_frame = cv2.cvtColor(rgb_frame, cv2.COLOR_RGB2BGR)
