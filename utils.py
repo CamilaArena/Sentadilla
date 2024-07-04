@@ -77,12 +77,32 @@ def aceleracion_instantanea(vel_actual_x, vel_anterior_x, vel_actual_y, vel_ante
   dvy = vel_actual_y - vel_anterior_y
   return (dvx/tiempo, dvy/tiempo)
 
+def obtener_angulo_barra(pos_left_ankle, pos_left_knee, pos_left_heel, pos_left_foot_index):
+  AB = (pos_left_ankle[0] - pos_left_knee[0], pos_left_ankle[1] - pos_left_knee[1])
+  BD = (pos_left_heel[0] - pos_left_foot_index[0], pos_left_heel[1] - pos_left_foot_index[1])
+  AB_escalar = (AB[0] * BD[0] + AB[1] * BD[1])
+  AB_magnitud = (AB[0]**2 + AB[1]**2)**0.5
+  BD_magnitud = (BD[0]**2 + BD[1]**2)**0.5
+  valor = AB_escalar / (AB_magnitud * BD_magnitud)
+  print(pos_left_foot_index[1] < pos_left_heel[1])
+  #print("valor", valor)
+  angulo = np.arccos(valor)
+  if( pos_left_foot_index[1] < pos_left_heel[1]):
+    if(angulo > 0):
+      if(angulo > np.radians(90)):
+        angulo = np.radians(180) - angulo
+  else:
+    if(angulo > 0):
+      if(angulo < np.radians(90)):
+        angulo = np.radians(180) - angulo
+  return [angulo, - (np.radians(180) - angulo), -angulo, np.radians(180) - angulo]
+
 def graficar_barra(image, pos_left_heel, pos_left_foot_index, pos_left_knee, pos_left_ankle, video_width, video_height):
   normalized_pos_left_foot_index = (pos_left_foot_index[0] * 0.3214562238 / longitud_brazo_x, 1-(pos_left_foot_index[1] * 0.2489993274 / longitud_pierna_y))
   normalized_pos_left_knee = (pos_left_knee[0] * 0.3214562238 / longitud_brazo_x, 1-(pos_left_knee[1] * 0.2489993274 / longitud_pierna_y))
   normalized_pos_left_heel = (pos_left_heel[0] * 0.3214562238 / longitud_brazo_x, 1-(pos_left_heel[1] * 0.2489993274 / longitud_pierna_y))
   
-  AB = (pos_left_ankle[0] - pos_left_knee[0], pos_left_ankle[1] - pos_left_knee[1])
+  """AB = (pos_left_ankle[0] - pos_left_knee[0], pos_left_ankle[1] - pos_left_knee[1])
   BD = (pos_left_heel[0] - pos_left_foot_index[0], pos_left_heel[1] - pos_left_foot_index[1])
   AB_escalar = (AB[0] * BD[0] + AB[1] * BD[1])
   AB_magnitud = (AB[0]**2 + AB[1]**2)**0.5
@@ -101,7 +121,7 @@ def graficar_barra(image, pos_left_heel, pos_left_foot_index, pos_left_knee, pos
         angulo = np.radians(180) - angulo
         
   angulo_grados = np.degrees(angulo)
-  print("angulo tobillo: ",angulo_grados)
+  print("angulo tobillo: ",angulo_grados)"""
   
   distancia_punta_pie_tobillo_x = (0.23 * 0.3214562238) / longitud_brazo_x
   distancia_punta_pie_tobillo_y = (0.0001 * 0.2489993274) / longitud_pierna_y
@@ -147,24 +167,29 @@ def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_
   distancia_momento_normal = ((pos_left_foot_index[0]-pos_left_ankle[0])**2 + (pos_left_foot_index[1]-pos_left_ankle[1])**2)**0.5
   # Obtengo la aceleracion angular del dataframe
   aceleracionAngular = df.loc[df["frame_number"] == frame_number, "AceleracionAngular"].iloc[0]
+  # Calculo los angulos a partir de los vectores Tobillo-Rodilla y PuntaPie-Talon
+  cuadrantes = obtener_angulo_barra(pos_left_ankle, pos_left_knee, pos_left_heel, pos_left_foot_index)
   # Obtengo angulo entre la rodilla, tobillo, talon y lo paso a radianes para calcular el sen
-  angulo_gemelo_talon = calculate_angle(pos_left_heel, pos_left_ankle, pos_left_knee)
+  #angulo_gemelo_talon = calculate_angle(pos_left_heel, pos_left_ankle, pos_left_knee)
+  angulo_gemelo_talon_cuadrante = cuadrantes[0]
   #print("angulo gemelo", angulo_gemelo_talon)
   # Obtengo el angulo que se forma entre la punta del pie, tobillo, y un punto en la direccion del peso
-  angulo_peso = calculate_angle((pos_left_ankle[0],pos_left_ankle[1]-1), pos_left_ankle, pos_left_foot_index)
+  #angulo_peso = calculate_angle((pos_left_ankle[0],pos_left_ankle[1]-1), pos_left_ankle, pos_left_foot_index)
+  angulo_gemelo_peso_cuadrante = cuadrantes[2]
   #print("angulo peso", angulo_peso)
   # Obtengo el angulo que se forma entre la punta del pie, tobillo y rodilla
-  angulo_normal = calculate_angle(pos_left_foot_index, pos_left_ankle, pos_left_knee)
+  #angulo_normal = calculate_angle(pos_left_foot_index, pos_left_ankle, pos_left_knee)
+  angulo_gemelo_normal_cuadrante = cuadrantes[1]
   # Distancia desde el centro del pie al tobillo para teorema de Steiner
   distancia_al_centro = 0.08  
   # Momento inercial
   momento_inercial = (1/12 * masa_pie * longitud_pie**2) + (masa_pie * distancia_al_centro**2)
   # Momento del peso
-  momento_peso = 70 * distancia_al_centro * math.sin(angulo_peso)
+  momento_peso = 70 * distancia_al_centro * math.sin(angulo_gemelo_peso_cuadrante)
   # Momento de la normal
-  momento_normal = 70 * distancia_momento_normal * math.sin(angulo_normal)
+  momento_normal = 70 * distancia_momento_normal * math.sin(angulo_gemelo_normal_cuadrante)
   # Calculo la fuerza que realiza el gemelo
-  magnitud_fuerza_gemelo = abs(-((momento_inercial * aceleracionAngular) - momento_normal + momento_peso) / (distancia_momento_gemelo * math.sin(angulo_gemelo_talon)))
+  magnitud_fuerza_gemelo = abs(-((momento_inercial * aceleracionAngular) - momento_normal + momento_peso) / (distancia_momento_gemelo * math.sin(angulo_gemelo_talon_cuadrante)))
   # Vector fuerza gemelo es el vector unitario que va desde el tobillo a la rodilla
   vector_fuerza_gemelo_unitario = (pos_left_knee[0] - pos_left_ankle[0], pos_left_knee[1] - pos_left_ankle[1]) / ((pos_left_ankle[0]-pos_left_knee[0])**2 + (pos_left_ankle[1]-pos_left_knee[1])**2)**0.5
   # Al vector fuerza gemelo lo multiplico por la fuerza que realiza este y lo devuelvo

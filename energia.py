@@ -10,9 +10,9 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf.symbol_database')
 
 # Completar con tus rutas
-video_path = ''
-output_video_path = ''
-output_csv_path = ''
+video_path = '/Users/valen/Downloads/Fisica/salto2.MP4'
+output_video_path = '/Users/valen/Downloads/Fisica/tracked_video.mp4'
+output_csv_path = '/Users/valen/Downloads/Fisica/pose_data.csv'
 
 # Input usuario
 peso_persona = 65  # kg

@@ -17,14 +17,14 @@ def generar_grafico_csv(ruta_csv, columna):
     plt.figure(figsize=(10, 6))
     plt.plot(df[columna], label=columna)
     plt.title(f'{columna} - {ruta_csv}')
-    plt.xlabel('Índice')
+    plt.xlabel('Tiempo')
     plt.ylabel(columna)
     plt.legend()
     plt.grid(True)
     plt.show()
 
 # Ejemplo de uso
-ruta_csv_nuevo = ''
+ruta_csv_nuevo = '/Users/valen/Downloads/Fisica/landmarks.csv'
 columna = 'FuerzaGemelo' # Cambiar por nombre de la columna deseada
 
 generar_grafico_csv(ruta_csv_nuevo, columna)
