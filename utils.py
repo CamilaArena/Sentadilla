@@ -77,30 +77,59 @@ def aceleracion_instantanea(vel_actual_x, vel_anterior_x, vel_actual_y, vel_ante
   dvy = vel_actual_y - vel_anterior_y
   return (dvx/tiempo, dvy/tiempo)
 
-def graficar_barra(image, pos_left_heel, pos_left_foot_index, pos_left_knee, video_width, video_height):
+def graficar_barra(image, pos_left_heel, pos_left_foot_index, pos_left_knee, pos_left_ankle, video_width, video_height):
   normalized_pos_left_foot_index = (pos_left_foot_index[0] * 0.3214562238 / longitud_brazo_x, 1-(pos_left_foot_index[1] * 0.2489993274 / longitud_pierna_y))
   normalized_pos_left_knee = (pos_left_knee[0] * 0.3214562238 / longitud_brazo_x, 1-(pos_left_knee[1] * 0.2489993274 / longitud_pierna_y))
   normalized_pos_left_heel = (pos_left_heel[0] * 0.3214562238 / longitud_brazo_x, 1-(pos_left_heel[1] * 0.2489993274 / longitud_pierna_y))
   
-  distancia_punta_pie_tobillo = 0.23
+  AB = (pos_left_ankle[0] - pos_left_knee[0], pos_left_ankle[1] - pos_left_knee[1])
+  BD = (pos_left_heel[0] - pos_left_foot_index[0], pos_left_heel[1] - pos_left_foot_index[1])
+  AB_escalar = (AB[0] * BD[0] + AB[1] * BD[1])
+  AB_magnitud = (AB[0]**2 + AB[1]**2)**0.5
+  BD_magnitud = (BD[0]**2 + BD[1]**2)**0.5
+  valor = AB_escalar / (AB_magnitud * BD_magnitud)
+  print(pos_left_foot_index[1] < pos_left_heel[1])
+  #print("valor", valor)
+  angulo = np.arccos(valor)
+  if( pos_left_foot_index[1] < pos_left_heel[1]):
+    if(angulo > 0):
+      if(angulo > np.radians(90)):
+        angulo = np.radians(180) - angulo
+  else:
+    if(angulo > 0):
+      if(angulo < np.radians(90)):
+        angulo = np.radians(180) - angulo
+        
+  angulo_grados = np.degrees(angulo)
+  print("angulo tobillo: ",angulo_grados)
+  
+  distancia_punta_pie_tobillo_x = (0.23 * 0.3214562238) / longitud_brazo_x
+  distancia_punta_pie_tobillo_y = (0.0001 * 0.2489993274) / longitud_pierna_y
+  
+  
   vector_puntapie_talon =  (normalized_pos_left_heel[0] - normalized_pos_left_foot_index[0], normalized_pos_left_heel[1] - normalized_pos_left_foot_index[1])
-  print("vector_puntapie: ",vector_puntapie_talon)
+  
   distancia_vector_puntapie_talon = ((vector_puntapie_talon[0] * video_width)**2 + (vector_puntapie_talon[1] * video_height)**2)**0.5
-  versor_vector_puntapie_talon = (vector_puntapie_talon[0] / distancia_vector_puntapie_talon, vector_puntapie_talon[1] / distancia_vector_puntapie_talon)
-  vector_puntapie_tobillo = (versor_vector_puntapie_talon[0] * distancia_punta_pie_tobillo, versor_vector_puntapie_talon[1] * distancia_punta_pie_tobillo)
+  
+  versor_vector_puntapie_talon = ((vector_puntapie_talon[0] * video_width) / distancia_vector_puntapie_talon, (vector_puntapie_talon[1] * video_height) / distancia_vector_puntapie_talon)
+  
+  vector_puntapie_tobillo = (versor_vector_puntapie_talon[0] * (distancia_punta_pie_tobillo_x * video_width), versor_vector_puntapie_talon[1] * (distancia_punta_pie_tobillo_y * video_height))
+  
   vector_tobillo_rodilla = (normalized_pos_left_knee[0] - vector_puntapie_tobillo[0],normalized_pos_left_knee[1] - vector_puntapie_tobillo[1])
-  cv2.circle(image,(int(normalized_pos_left_foot_index[0] * video_width) , int(normalized_pos_left_foot_index[1] * video_height)),8, (255,0,0), -1,3)
-  cv2.circle(image,(int(normalized_pos_left_heel[0] * video_width) , int(normalized_pos_left_heel[1] * video_height)),8, (255,0,0), -1,3)
-  cv2.circle(image,(int((vector_puntapie_talon[0] + normalized_pos_left_foot_index[0]) * video_width) , int((vector_puntapie_talon[1]+normalized_pos_left_foot_index[1]) * video_height)),8, (255,0,0), -1,3)
-  #cv2.circle(image, normalized_pos_left_foot_index,20, (255,0,0), -1,3)
-  #cv2.arrowedLine(image, (int(pos_left_foot_index[0] * video_width) , int(pos_left_foot_index[1] * video_height)) , (int(pos_left_heel[0] * video_width) , int(pos_left_heel[1] * video_height)) , (0,255,0), 2)
-  #cv2.arrowedLine(image, (int(vector_puntapie_tobillo[0] * video_width) , int(vector_puntapie_tobillo[1] * video_height)) , (int(vector_tobillo_rodilla[0] * video_width) , int(vector_tobillo_rodilla[1] * video_height)) , (0,255,0), 2)
+  #cv2.circle(image,(int(normalized_pos_left_foot_index[0] * video_width) , int(normalized_pos_left_foot_index[1] * video_height)),8, (255,0,0), -1,3)
+  #cv2.circle(image,(int(normalized_pos_left_heel[0] * video_width) , int(normalized_pos_left_heel[1] * video_height)),8, (255,0,0), -1,3)
+  #cv2.circle(image,(int((vector_puntapie_talon[0] + normalized_pos_left_foot_index[0]) * video_width) , int((vector_puntapie_talon[1]+normalized_pos_left_foot_index[1]) * video_height)),8, (0,255,0), -1,3)
+  #cv2.circle(image, (int((vector_puntapie_talon[0] + normalized_pos_left_foot_index[0] )* video_width), int((vector_puntapie_talon[1] + normalized_pos_left_foot_index[1]) * video_height)),10, (255,255,255), -1,3)
+  cv2.arrowedLine(image, (int(normalized_pos_left_foot_index[0] * video_width), int(normalized_pos_left_foot_index[1] * video_height)) , (int((vector_puntapie_talon[0]+ normalized_pos_left_foot_index[0]) * video_width) , int((vector_puntapie_talon[1]+ normalized_pos_left_foot_index[1]) * video_height)) , (0,255,0), 7)
+  cv2.arrowedLine(image, (int(vector_puntapie_tobillo[0]+ normalized_pos_left_foot_index[0] * video_width) , int(vector_puntapie_tobillo[1]+ normalized_pos_left_foot_index[1] * video_height)) , (int((normalized_pos_left_knee[0]) * video_width) , int((normalized_pos_left_knee[1]) * video_height)) , (255,0,0), 2)
+  cv2.arrowedLine(image, (int(normalized_pos_left_foot_index[0] * video_width) , int(normalized_pos_left_foot_index[1] * video_height)) , (int(vector_puntapie_tobillo[0] + normalized_pos_left_foot_index[0] * video_width) , int(vector_puntapie_tobillo[1]+ normalized_pos_left_foot_index[1] * video_height)) , (255,0,0), 2)
+  
 
 def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index,image,video_height,video_width):
   distancia_punta_pie_tobillo = 0.23
   vector_puntapie_talon =  (pos_left_heel[0]-pos_left_foot_index[0],pos_left_heel[1]-pos_left_foot_index[1])
   distancia_vector_puntapie_talon = (vector_puntapie_talon[0]**2 + vector_puntapie_talon[1]**2)**0.5
-  versor_vector_puntapie_talon = (vector_puntapie_talon[0] / distancia_vector_puntapie_talon, vector_puntapie_talon[1] / distancia_vector_puntapie_talon)
+  versor_vector_puntapie_talon = ((vector_puntapie_talon[0] * video_width) / distancia_vector_puntapie_talon, (vector_puntapie_talon[1] * video_height) / distancia_vector_puntapie_talon)
   vector_puntapie_tobillo = (versor_vector_puntapie_talon[0] * distancia_punta_pie_tobillo, versor_vector_puntapie_talon[1] * distancia_punta_pie_tobillo)
   vector_tobillo_rodilla = (pos_left_knee[0] - vector_puntapie_tobillo[0],pos_left_knee[1] - vector_puntapie_tobillo[1])
   
@@ -120,10 +149,10 @@ def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_
   aceleracionAngular = df.loc[df["frame_number"] == frame_number, "AceleracionAngular"].iloc[0]
   # Obtengo angulo entre la rodilla, tobillo, talon y lo paso a radianes para calcular el sen
   angulo_gemelo_talon = calculate_angle(pos_left_heel, pos_left_ankle, pos_left_knee)
-  print("angulo gemelo", angulo_gemelo_talon)
+  #print("angulo gemelo", angulo_gemelo_talon)
   # Obtengo el angulo que se forma entre la punta del pie, tobillo, y un punto en la direccion del peso
   angulo_peso = calculate_angle((pos_left_ankle[0],pos_left_ankle[1]-1), pos_left_ankle, pos_left_foot_index)
-  print("angulo peso", angulo_peso)
+  #print("angulo peso", angulo_peso)
   # Obtengo el angulo que se forma entre la punta del pie, tobillo y rodilla
   angulo_normal = calculate_angle(pos_left_foot_index, pos_left_ankle, pos_left_knee)
   # Distancia desde el centro del pie al tobillo para teorema de Steiner

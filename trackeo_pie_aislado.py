@@ -89,16 +89,16 @@ while cap.isOpened():
             pose_row[landmark.name + '_Y'] = (1-pos.y) * (longitud_pierna_y / 0.2489993274) #(1-pos.y) * (0.46/0.26961168646)
 
         # Draw landmarks
-    #    mp_drawing.draw_landmarks(
-    #        rgb_frame, 
-    #        result.pose_landmarks, 
-    #        mp_pose.POSE_CONNECTIONS)
+        mp_drawing.draw_landmarks(
+            rgb_frame, 
+            result.pose_landmarks, 
+            mp_pose.POSE_CONNECTIONS)
 
     df = pd.concat([df, pd.DataFrame([pose_row])], ignore_index=True)
     if(frame_index>0):
         pos_prev_left_knee, pos_prev_left_ankle, pos_prev_left_heel = extraer_posiciones(df, frame_index-1, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL')
         pos_actual_left_knee, pos_actual_left_ankle, pos_actual_left_heel, pos_actual_left_foot_index, pos_actual_left_knee = extraer_posiciones(df, frame_index, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL', 'LEFT_FOOT_INDEX', 'LEFT_KNEE')
-        graficar_barra(rgb_frame, pos_actual_left_heel, pos_actual_left_foot_index, pos_actual_left_knee, output_width, output_height)
+        graficar_barra(rgb_frame, pos_actual_left_heel, pos_actual_left_foot_index, pos_actual_left_knee, pos_actual_left_ankle, output_width, output_height)
         # VELOCIDAD ANGULAR
         angulo_anterior = calculate_angle((pos_prev_left_knee[0], pos_prev_left_knee[1]), (pos_prev_left_ankle[0], pos_prev_left_ankle[1]), (pos_prev_left_heel[0], pos_prev_left_heel[1]))
         angulo_actual = calculate_angle((pos_actual_left_knee[0], pos_actual_left_knee[1]), (pos_actual_left_ankle[0], pos_actual_left_ankle[1]), (pos_actual_left_heel[0], pos_actual_left_heel[1]))
