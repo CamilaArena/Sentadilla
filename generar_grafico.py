@@ -24,7 +24,7 @@ def generar_grafico_csv(ruta_csv, columna):
     plt.show()
 
 # Ejemplo de uso
-ruta_csv_nuevo = '/Users/valen/Downloads/Fisica/landmarks.csv'
-columna = 'FuerzaGemelo'
+ruta_csv_nuevo = ''
+columna = 'FuerzaGemelo' # Cambiar por nombre de la columna deseada
 
 generar_grafico_csv(ruta_csv_nuevo, columna)

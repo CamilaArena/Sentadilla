@@ -183,3 +183,10 @@ def graficar_vector_fuerza(image, magnitud_fuerza_gemelo, pos_left_ankle, pos_le
   #cv2.arrowedLine(image, (int(normalized_pos_left_ankle[0] * video_width) , int(normalized_pos_left_ankle[1] * video_height)) , (int(versor[0] * magnitud_fuerza_gemelo + normalized_pos_left_ankle[0] * video_width) , int(versor[1] * magnitud_fuerza_gemelo + normalized_pos_left_ankle[1] * video_height)) , (255,0,0), 4)
   cv2.arrowedLine(image, (int(normalized_pos_left_heel[0] * video_width) , int(normalized_pos_left_heel[1] * video_height)) , (int(versor[0] * (magnitud_fuerza_gemelo/2) + normalized_pos_left_heel[0] * video_width) , int(versor[1] * (magnitud_fuerza_gemelo/2) + normalized_pos_left_heel[1] * video_height)) , (0,255,0), 2)
   
+
+#--------------FUNCIONES PARA ENERGIA------------------
+def calcular_energia_potencial(masa, altura, g):
+    return masa * g * altura
+
+def calcular_energia_cinetica(masa, velocidad):
+    return 0.5 * masa * (velocidad ** 2)
