@@ -85,8 +85,8 @@ while cap.isOpened():
         # Extract landmark positions
         for landmark in articulaciones:
             pos = landmarks[landmark]
-            pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x / 0.3214562238)#pos.x * (0.44/0.15116006135)
-            pose_row[landmark.name + '_Y'] = (1-pos.y) * (longitud_pierna_y / 0.2489993274) #(1-pos.y) * (0.46/0.26961168646)
+            pose_row[landmark.name + '_X'] = pos.x * (longitud_brazo_x / 0.3214562238)
+            pose_row[landmark.name + '_Y'] = (1-pos.y) * (longitud_pierna_y / 0.2489993274)
 
         # Draw landmarks
         mp_drawing.draw_landmarks(
@@ -98,7 +98,7 @@ while cap.isOpened():
     if(frame_index>0):
         pos_prev_left_knee, pos_prev_left_ankle, pos_prev_left_heel = extraer_posiciones(df, frame_index-1, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL')
         pos_actual_left_knee, pos_actual_left_ankle, pos_actual_left_heel, pos_actual_left_foot_index, pos_actual_left_knee = extraer_posiciones(df, frame_index, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL', 'LEFT_FOOT_INDEX', 'LEFT_KNEE')
-        graficar_barra(rgb_frame, pos_actual_left_heel, pos_actual_left_foot_index, pos_actual_left_knee, pos_actual_left_ankle, output_width, output_height)
+        
         # VELOCIDAD ANGULAR
         angulo_anterior = calculate_angle((pos_prev_left_knee[0], pos_prev_left_knee[1]), (pos_prev_left_ankle[0], pos_prev_left_ankle[1]), (pos_prev_left_heel[0], pos_prev_left_heel[1]))
         angulo_actual = calculate_angle((pos_actual_left_knee[0], pos_actual_left_knee[1]), (pos_actual_left_ankle[0], pos_actual_left_ankle[1]), (pos_actual_left_heel[0], pos_actual_left_heel[1]))
@@ -153,8 +153,7 @@ for i in range(0, frame_index-1):
     pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index = extraer_posiciones(df_nuevo, i, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL', 'LEFT_FOOT_INDEX')
     # Posiciones normalizadas para graficar en el video
     pos_left_knee_normalizada, pos_left_ankle_normalizada, pos_left_heel_normalizada, pos_left_foot_index_normalizada = extraer_posiciones(df, i, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL', 'LEFT_FOOT_INDEX')
-    magnitud_fuerza_gemelo = calcular_fuerza_gemelo(df_nuevo, i, pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index,output_frame,output_height,output_width)
-    #magnitud_fuerza = (vector_fuerza_gemelo[0]**2 + vector_fuerza_gemelo[1]**2)**0.5
+    magnitud_fuerza_gemelo = calcular_fuerza_gemelo(df_nuevo, i, pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index)
     df_nuevo.loc[df_nuevo["frame_number"] == i, "FuerzaGemelo"] = magnitud_fuerza_gemelo
 
 df_nuevo['FuerzaGemelo'] = savgol_filter(df_nuevo['FuerzaGemelo'], window_length=10, polyorder=2)
@@ -183,8 +182,6 @@ while cap2.isOpened():
     rgb_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGB)
     tiempo = round(frame_index,2)
     cv2.putText(rgb_frame, "Tiempo:"+ str(tiempo),(20,50),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
-    #cv2.circle(rgb_frame, (int(40) , int(40)) , 20, (255,0,255), -1,3)
-    #cv2.circle(rgb_frame, (int(0.5 * output_width) , int(0.5 * output_height)) , 20, (255,0,255), -1,3)
     pos_left_knee, pos_left_ankle, pos_left_heel = extraer_posiciones(df_nuevo, frame_index, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL')
     magnitud_fuerza_gemelo = df_nuevo.loc[df_nuevo["frame_number"] == frame_index, "FuerzaGemelo"].iloc[0]
     graficar_vector_fuerza(rgb_frame,magnitud_fuerza_gemelo,pos_left_ankle,pos_left_knee,pos_left_heel,output_width,output_height)
