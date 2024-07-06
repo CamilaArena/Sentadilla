@@ -6,24 +6,25 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from utils import *
 from plotly.subplots import make_subplots
+from scipy.signal import savgol_filter
 
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf.symbol_database')
 
 # # Rutas
 video_paths = [
-    'D:/Fisica/lat_tincho.mov',
-    'D:/Fisica/sentadilla_lateral.mp4',
+    '/Users/valen/Downloads/Fisica/tincho-sentadilla.MP4',
+    '/Users/valen/Downloads/Fisica/aitor_sentadilla.MP4',
     #'/Users/camia/Desktop/proyecto/test.mp4',
 ]
 output_csv_paths = [
-    'D:/Fisica/pose_data.csv',
-    'D:/Fisica/pose_data2.csv'
+    '/Users/valen/Downloads/Fisica/pose_data_tincho.csv',
+    '/Users/valen/Downloads/Fisica/pose_data_aitor.csv'
     #'/Users/camia/Desktop/proyecto/pose_data3.csv'
 ]
 output_video_paths = [
-    'D:/Fisica/tracked_video.mp4',
-    'D:/Fisica/tracked_video2.mp4'
+    '/Users/valen/Downloads/Fisica/tracked_video_tincho.mp4',
+    '/Users/valen/Downloads/Fisica/tracked_video_aitor.mp4'
     #'/Users/camia/Desktop/proyecto/tracked_video3.mp4'
 ]
 
@@ -120,87 +121,6 @@ def diagrama_cuerpo(frame_number):
   #cv2.line(image, int(centro[0]) * video_width , int(centro[0]-20) * video_width , (255,0,0), 4) #peso
 
 
-
-# # Diagrama de cuerpo libre / Peso, Normal y Fuerza
-# 
-def diagramaDeCuerpo():
-    # Valores fijos se encuentran declarados al inicio
-    # Valor de la gravedad / aceleracion m/s2
-    g = 9.81
-    # Peso del cuerpo = 637
-    # Peso de la barra / Evaluamos la barra y sus discos como un cuerpo = 1372N
-    peso_barra = peso_pesa * g
-
-    # Normal de la barra = 1372N
-    normal_barra = peso_barra
-    # Normal del cuerpo = 2009
-    normal_cuerpo = normal_barra + peso_persona
-
-    # Tomaremos un valor estático para simular la fuerza realizada por la persona para levantar la barra. Se aplica sobre el cuerpo
-    # Segunda ley de Newton: sumatoria de fuerzas = masa * aceleracion. La fuerza debe ser mayor que 1372N
-    fuerza_empuje = 1400
-
-    if normal_cuerpo > 0:
-        normal_direccion_cuerpo = "Upward"
-        peso_direccion_cuerpo = "Upward"
-    else:
-        normal_direccion_cuerpo = "Downward"
-        peso_direccion_cuerpo = "Downward"
-
-    if normal_barra > 0:
-        normal_direccion_barra = "Upward"
-        peso_direccion_barra = "Upward"
-    else:
-        normal_direccion_barra = "Downward"
-        peso_direccion_barra = "Downward"
-
-    if fuerza_empuje > 0:
-        fuerza_direccion_cuerpo = "Upward"
-    else:
-        fuerza_direccion_cuerpo = "Downward"
-
-    return normal_direccion_cuerpo, peso_direccion_cuerpo, normal_direccion_barra, peso_direccion_barra, fuerza_direccion_cuerpo
-
-def generate_free_body_diagrams():
-    # Figura y ejes
-    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-
-    # Diagrama de cuerpo libre de la barra
-    axs[0].arrow(0, 0, 0, -1372, head_width=50, head_length=100, fc='red', ec='red')
-    axs[0].arrow(0, 0, 0, -637, head_width=50, head_length=100, fc='blue', ec='blue')
-    axs[0].set_xlim(-2000, 2000)
-    axs[0].set_ylim(-2000, 2000)
-    axs[0].set_xlabel('X')
-    axs[0].set_ylabel('Y')
-    axs[0].set_title('Diagrama de Cuerpo libre - Barra')
-
-    # Diagrama de cuerpo libre para el cuerpo
-    axs[1].arrow(0, 0, 0, -2009, head_width=50, head_length=100, fc='red', ec='red')
-    axs[1].arrow(0, 0, 0, -1400, head_width=50, head_length=100, fc='green', ec='green')
-    axs[1].arrow(0, 0, 0, -637, head_width=50, head_length=100, fc='blue', ec='blue')
-    axs[1].set_xlim(-2000, 2000)
-    axs[1].set_ylim(-2000, 2000)
-    axs[1].set_xlabel('X')
-    axs[1].set_ylabel('Y')
-    axs[1].set_title('Diagrama de cuerpo libre - Cuerpo')
-
-    # Diagrama de cuerpo libre del cuerpo con la barra encima
-    axs[2].arrow(0, 0, 0, -2009, head_width=50, head_length=100, fc='red', ec='red')
-    axs[2].arrow(0, 0, 0, -2772, head_width=50, head_length=100, fc='green', ec='green')
-    axs[2].arrow(0, 0, 0, -1372, head_width=50, head_length=100, fc='blue', ec='blue')
-    axs[2].arrow(0, -1372, 0, -637, head_width=50, head_length=100, fc='blue', ec='blue')
-    axs[2].set_xlim(-2000, 2000)
-    axs[2].set_ylim(-4000, 0)
-    axs[2].set_xlabel('X')
-    axs[2].set_ylabel('Y')
-    axs[2].set_title('Diagrama de cuerpo libre - Cuerpo con la barra')
-
-    plt.tight_layout()
-    plt.show()
-
-#Funciones para ejecutar el codigo
-diagramaDeCuerpo()
-generate_free_body_diagrams()
 
 # # Cálculo de Torque
 # 
@@ -353,8 +273,8 @@ for i, video_path in enumerate(video_paths):
                                   mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=5, circle_radius=5),
                                   mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=5, circle_radius=5))
 
-        if frame_number > 0:
-            df_completo.loc[df_completo["frame_number"] == frame_number, "Tiempo"] = tiempo_por_frame * frame_number
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Tiempo"] = tiempo_por_frame * frame_number
+        """if frame_number > 0:
             previous_frame = frame_number - 1
 
             pos_prev_left_hip, pos_prev_left_knee, pos_prev_left_ankle = extraer_posiciones(df_completo, previous_frame, 'LEFT_HIP', 'LEFT_KNEE', 'LEFT_ANKLE')
@@ -390,9 +310,9 @@ for i, video_path in enumerate(video_paths):
             df_completo.loc[df_completo["frame_number"] == frame_number, "Aceleracion(Rodilla)_X"] = aceleracion_actual_rodilla[0]
             df_completo.loc[df_completo["frame_number"] == frame_number, "Aceleracion(Rodilla)_Y"] = aceleracion_actual_rodilla[1]
             df_completo.loc[df_completo["frame_number"] == frame_number, "Aceleracion(Cadera)_X"] = aceleracion_actual_cadera[0]
-            df_completo.loc[df_completo["frame_number"] == frame_number, "Aceleracion(Cadera)_Y"] = aceleracion_actual_cadera[1]
+            df_completo.loc[df_completo["frame_number"] == frame_number, "Aceleracion(Cadera)_Y"] = aceleracion_actual_cadera[1]"""
 
-        # Escribir el frame procesado en el video de salida
+    # Escribir el frame procesado en el video de salida
         video_writer.write(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
         frame_number += 1
 
@@ -401,11 +321,60 @@ for i, video_path in enumerate(video_paths):
     video_writer.release()
     cap.release()
 
-    window_length = 11 
-    polyorder = 2
-    df_completo['Velocidad(Cadera)_Y'] = savgol_filter(df_completo['Velocidad(Cadera)_Y'], window_length, polyorder)
-    df_completo['Aceleracion(Cadera)_Y'] = savgol_filter(df_completo['Aceleracion(Cadera)_Y'], window_length, polyorder)
-
+    df_completo['LEFT_HIP_Y'] = savgol_filter(df_completo['LEFT_HIP_Y'], window_length = 30, polyorder = 2)
+    df_completo['LEFT_KNEE_Y'] = savgol_filter(df_completo['LEFT_KNEE_Y'], window_length = 30, polyorder = 2)
+    # Calculo la velocidad a partir de las posiciones suavizadas
+    for frame_number in range(1, len(df_completo)):
+        previous_frame = frame_number - 1
+        
+        pos_prev_left_hip = (df_completo.loc[previous_frame, 'LEFT_HIP_X'], df_completo.loc[previous_frame, 'LEFT_HIP_Y'])
+        pos_actual_left_hip = (df_completo.loc[frame_number, 'LEFT_HIP_X'], df_completo.loc[frame_number, 'LEFT_HIP_Y'])
+        
+        pos_prev_left_knee = (df_completo.loc[previous_frame, 'LEFT_KNEE_X'], df_completo.loc[previous_frame, 'LEFT_KNEE_Y'])
+        pos_actual_left_knee = (df_completo.loc[frame_number, 'LEFT_KNEE_X'], df_completo.loc[frame_number, 'LEFT_KNEE_Y'])
+        
+        velocidad_cadera = velocidad_instantanea(pos_prev_left_hip, pos_actual_left_hip, tiempo_por_frame)
+        velocidad_rodilla = velocidad_instantanea(pos_prev_left_knee, pos_actual_left_knee, tiempo_por_frame)
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_X"] = velocidad_cadera[0]
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_Y"] = velocidad_cadera[1]
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Rodilla)_X"] = velocidad_rodilla[0]
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Rodilla)_Y"] = velocidad_rodilla[1]
+    
+    df_completo.loc[df_completo["frame_number"] == 0, "Velocidad(Cadera)_X"] = 0
+    df_completo.loc[df_completo["frame_number"] == 0, "Velocidad(Cadera)_Y"] = 0
+    df_completo.loc[df_completo["frame_number"] == 0, "Velocidad(Rodilla)_X"] = 0
+    df_completo.loc[df_completo["frame_number"] == 0, "Velocidad(Rodilla)_Y"] = 0       
+    
+    #df_completo.interpolate(method='linear',inplace=True)
+    df_completo['Velocidad(Cadera)_Y'] = savgol_filter(df_completo['Velocidad(Cadera)_Y'],  window_length = 60, polyorder = 2)
+    
+    # Calculo la velocidad a partir de las posiciones suavizadas
+    for frame_number in range(1, len(df_completo)):
+        previous_frame = frame_number - 1
+        aceleracion_actual_cadera = aceleracion_instantanea(
+            df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_X"].iloc[0],
+            df_completo.loc[df_completo["frame_number"] == previous_frame, "Velocidad(Cadera)_X"].iloc[0],
+            df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Cadera)_Y"].iloc[0],
+            df_completo.loc[df_completo["frame_number"] == previous_frame, "Velocidad(Cadera)_Y"].iloc[0], tiempo_por_frame)
+    
+        aceleracion_actual_rodilla = aceleracion_instantanea(
+            df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Rodilla)_X"].iloc[0],
+            df_completo.loc[df_completo["frame_number"] == previous_frame, "Velocidad(Rodilla)_X"].iloc[0],
+            df_completo.loc[df_completo["frame_number"] == frame_number, "Velocidad(Rodilla)_Y"].iloc[0],
+            df_completo.loc[df_completo["frame_number"] == previous_frame, "Velocidad(Rodilla)_Y"].iloc[0], tiempo_por_frame)
+    
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Aceleracion(Rodilla)_X"] = aceleracion_actual_rodilla[0]
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Aceleracion(Rodilla)_Y"] = aceleracion_actual_rodilla[1]
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Aceleracion(Cadera)_X"] = aceleracion_actual_cadera[0]
+        df_completo.loc[df_completo["frame_number"] == frame_number, "Aceleracion(Cadera)_Y"] = aceleracion_actual_cadera[1]
+    
+    df_completo.loc[df_completo["frame_number"] == 0, "Aceleracion(Cadera)_X"] = 0
+    df_completo.loc[df_completo["frame_number"] == 0, "Aceleracion(Cadera)_Y"] = 0
+    df_completo.loc[df_completo["frame_number"] == 0, "Aceleracion(Rodilla)_X"] = 0
+    df_completo.loc[df_completo["frame_number"] == 0, "Aceleracion(Rodilla)_Y"] = 0          
+    #df_completo.interpolate(method='linear',inplace=True)
+    df_completo['Aceleracion(Cadera)_Y'] = savgol_filter(df_completo['Aceleracion(Cadera)_Y'],  window_length = 30, polyorder = 2)
+    
     df_completo.to_csv(output_csv_paths[i], index=False)
 
     print("Proceso completado. Videos trackeados guardados en:", output_video_paths[i])
@@ -429,8 +398,8 @@ for i, csv_path in enumerate(output_csv_paths):
     df_completo['Tiempo'] = df_completo['Tiempo'] * (min_duration / df_completo['Tiempo'].max())
     
     window_size = 50
-    left_hip_y_smoothed = df_completo['LEFT_HIP_Y'].rolling(window=window_size).mean()
-    left_knee_y_smoothed = df_completo['LEFT_KNEE_Y'].rolling(window=window_size).mean()
+    left_hip_y_smoothed = df_completo['LEFT_HIP_Y']
+    left_knee_y_smoothed = df_completo['LEFT_KNEE_Y']
 
     #------------POSICIONES DE CADERA Y RODILLA----------------------
     trace1 = go.Scatter(x=df_completo['Tiempo'], y=left_hip_y_smoothed, mode='lines', name=f'Altura de la cadera (Video {i+1})', line=dict(color='blue'))
@@ -453,9 +422,9 @@ for i, csv_path in enumerate(output_csv_paths):
     fig_posiciones.show()
 
     #-------------VELOCIDAD, POSICIÓN Y ACELERACION DE CADERA-------------------
-    velocidad_smoothed = df_completo['Velocidad(Cadera)_Y'].rolling(window=window_size).mean()
-    aceleracion_smoothed = df_completo['Aceleracion(Cadera)_Y'].rolling(window=window_size).mean()
-    posicion_cadera_smoothed = df_completo['LEFT_HIP_Y'].rolling(window=window_size).mean()
+    velocidad_smoothed = df_completo['Velocidad(Cadera)_Y']#.rolling(window=window_size).mean()
+    aceleracion_smoothed = df_completo['Aceleracion(Cadera)_Y']#.rolling(window=window_size).mean()
+    posicion_cadera_smoothed = df_completo['LEFT_HIP_Y']#.rolling(window=window_size).mean()
 
     # Crear trazas para velocidad, posición y aceleración de cada video
     vel_trace = go.Scatter(x=df_completo['Tiempo'], y=velocidad_smoothed, mode='lines', name=f'Velocidad de la cadera (Video {i+1})')
