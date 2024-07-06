@@ -94,8 +94,8 @@ def graficar_barra(image, pos_left_heel, pos_left_foot_index, pos_left_knee, vid
   
 
 def calcular_fuerza_gemelo(df, frame_number, pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index):
-  # Masa del pie, esta masa es el 1.5% del peso total de la persona
-  masa_pie = 0.015 * (70 / 9.8) 
+  # Masa del pie, esta masa es el 1.43% del peso total de la persona
+  masa_pie = 0.0143 * (70 / 9.8) 
   longitud_pie = ((pos_left_heel[0]-pos_left_foot_index[0])**2 + (pos_left_heel[1]-pos_left_foot_index[1])**2)**0.5
   # Distancia desde el tobillo a donde se aplica la fuerza del gemelo
   distancia_momento_gemelo = ((pos_left_heel[0]-pos_left_ankle[0])**2 + (pos_left_heel[1]-pos_left_ankle[1])**2)**0.5
