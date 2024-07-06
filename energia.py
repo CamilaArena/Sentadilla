@@ -153,12 +153,17 @@ for frame_number in range(1, len(df_completo)):
 
 
 
-        trabajo_total = trabajo_mecanica.sum()
-        trabajo_total_calorias = trabajo_total / 4.184 # aca ya esta en calorias xq 1 caloria son 4.184 joules
-        print(trabajo_total_calorias)
+        #trabajo_total = trabajo_total + abs(df_completo.loc[frame_number, 'Energia Mecanica(Cadera)'])
+        #trabajo_total_calorias = trabajo_total / 4.184 # aca ya esta en calorias xq 1 caloria son 4.184 joules
+        #
         # Trabajo=energiamecanica.diff() --> sumatoria de todos --> trabajo total --> pasarlo a calorias
+trabajo_total = 0
+for i in range(26, len(df_completo)):
+    trabajo_total = trabajo_total + abs(df_completo.loc[i, 'Trabajo'])
+  # print("")
 
-# print(trabajo_total_calorias)
+trabajo_total_calorias = trabajo_total / 4.184
+print("Trabajo total: ",trabajo_total_calorias)
 # Aplicar suavizado de Savitzky-Golay a las velocidades
 df_completo['Velocidad(Cadera)_X'] = savgol_filter(df_completo['Velocidad(Cadera)_X'], window_length, polyorder)
 df_completo['Velocidad(Cadera)_Y'] = savgol_filter(df_completo['Velocidad(Cadera)_Y'], window_length, polyorder)
@@ -180,7 +185,7 @@ window_length = 11
 polyorder = 2
 
 # Leer el archivo CSV con los datos
-output_csv_path = ''
+output_csv_path = '/Users/valen/Downloads/Fisica/pose_data.csv'
 df_completo = pd.read_csv(output_csv_path)
 
 # Suavizar las energías potencial, cinética y mecánica
