@@ -28,8 +28,8 @@ tiempo_por_frame = 1/fps
 
 print(frame_width, frame_height, fps)
 
-longitud_brazo_x = 0.65  # m --> 0.22330 px, 0.4873590171 - 0.8088152409 = 0.3214562238
-longitud_pierna_y = 0.94  # m --> 0.550944 px, 0.5937613547- 0.3447620273 = 0.2489993274
+longitud_brazo_x = 0.65
+longitud_pierna_y = 0.94
 
 # Define output video resolution (e.g., half of original)
 output_width = frame_width
@@ -55,6 +55,16 @@ for landmark in articulaciones:
 columns.append("VelocidadAngular")
 columns.append("AceleracionAngular")
 columns.append("FuerzaGemelo")
+
+columns.append("Velocidad(Rodilla)_Y")
+columns.append("Velocidad(Rodilla)_X")
+columns.append("Velocidad(Cadera)_Y")
+columns.append("Velocidad(Cadera)_X")
+
+columns.append("Aceleracion(Rodilla)_Y")
+columns.append("Aceleracion(Rodilla)_X")
+columns.append("Aceleracion(Cadera)_Y")
+columns.append("Aceleracion(Cadera)_X")
 
 # Prepare output video
 out = cv2.VideoWriter('/Users/valen/Downloads/Fisica/tracked_salto.mp4', cv2.VideoWriter_fourcc(*'mp4v'), fps, (output_width, output_height))
@@ -127,26 +137,57 @@ columnas_a_suavizar = [
 
 # Aplicar el filtro Savitzky-Golay a cada columna
 for columna in columnas_a_suavizar:
-    df_nuevo[columna] = savgol_filter(df[columna], window_length=3, polyorder=2)
+    df_nuevo[columna] = savgol_filter(df[columna], window_length=20, polyorder=2)
 
 for i in range(0, frame_index-1):
-    pos_prev_left_knee, pos_prev_left_ankle, pos_prev_left_heel = extraer_posiciones(df_nuevo, i, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL')
-    pos_actual_left_knee, pos_actual_left_ankle, pos_actual_heel = extraer_posiciones(df_nuevo, i+1, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL')
+    pos_prev_left_knee, pos_prev_left_ankle, pos_prev_left_heel, pos_prev_left_hip = extraer_posiciones(df_nuevo, i, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL', 'LEFT_HIP')
+    pos_actual_left_knee, pos_actual_left_ankle, pos_actual_heel, pos_actual_left_hip = extraer_posiciones(df_nuevo, i+1, 'LEFT_KNEE', 'LEFT_ANKLE', 'LEFT_HEEL', 'LEFT_HIP')
 
+    # VELOCIDAD
+    velocidad_cadera = velocidad_instantanea(pos_prev_left_hip, pos_actual_left_hip, tiempo_por_frame)
+    velocidad_rodilla = velocidad_instantanea(pos_prev_left_knee, pos_actual_left_knee, tiempo_por_frame)
+    df_nuevo.loc[df_nuevo["frame_number"] == i, "Velocidad(Cadera)_X"] = velocidad_cadera[0]
+    df_nuevo.loc[df_nuevo["frame_number"] == i, "Velocidad(Cadera)_Y"] = velocidad_cadera[1]
+    df_nuevo.loc[df_nuevo["frame_number"] == i, "Velocidad(Rodilla)_X"] = velocidad_rodilla[0]
+    df_nuevo.loc[df_nuevo["frame_number"] == i, "Velocidad(Rodilla)_Y"] = velocidad_rodilla[1]
+    
     # VELOCIDAD ANGULAR
     angulo_anterior = calculate_angle((pos_prev_left_knee[0], pos_prev_left_knee[1]), (pos_prev_left_ankle[0], pos_prev_left_ankle[1]), (pos_prev_left_heel[0], pos_prev_left_heel[1]))
     angulo_actual = calculate_angle((pos_actual_left_knee[0], pos_actual_left_knee[1]), (pos_actual_left_ankle[0], pos_actual_left_ankle[1]), (pos_actual_heel[0], pos_actual_heel[1]))
     vel_angular = velocidad_angular(angulo_anterior, angulo_actual, tiempo_por_frame)
     df_nuevo.loc[df_nuevo["frame_number"] == i, "VelocidadAngular"] = vel_angular
 
-df_nuevo['VelocidadAngular'] = savgol_filter(df_nuevo['VelocidadAngular'], window_length=3, polyorder=2)
+df_nuevo['VelocidadAngular'] = savgol_filter(df_nuevo['VelocidadAngular'], window_length=11, polyorder=2)
+
+# Suavizo la velocidad de la cadera en Y
+df_nuevo['Velocidad(Cadera)_Y'] = savgol_filter(df_nuevo['Velocidad(Cadera)_Y'], window_length=20, polyorder=2)
 
 for i in range(0, frame_index-1):
-    vel_prev, vel_actual = extraer_velocidad(df_nuevo, i), extraer_velocidad(df_nuevo, i+1)
+    
+    # ACELERACION
+    aceleracion_actual_cadera = aceleracion_instantanea(
+        df_nuevo.loc[df_nuevo["frame_number"] == i+1, "Velocidad(Cadera)_X"].iloc[0],
+        df_nuevo.loc[df_nuevo["frame_number"] == i, "Velocidad(Cadera)_X"].iloc[0],
+        df_nuevo.loc[df_nuevo["frame_number"] == i+1, "Velocidad(Cadera)_Y"].iloc[0],
+        df_nuevo.loc[df_nuevo["frame_number"] == i, "Velocidad(Cadera)_Y"].iloc[0], tiempo_por_frame)
+    
+    aceleracion_actual_rodilla = aceleracion_instantanea(
+        df_nuevo.loc[df_nuevo["frame_number"] == i+1, "Velocidad(Rodilla)_X"].iloc[0],
+        df_nuevo.loc[df_nuevo["frame_number"] == i, "Velocidad(Rodilla)_X"].iloc[0],
+        df_nuevo.loc[df_nuevo["frame_number"] == i+1, "Velocidad(Rodilla)_Y"].iloc[0],
+        df_nuevo.loc[df_nuevo["frame_number"] == i, "Velocidad(Rodilla)_Y"].iloc[0], tiempo_por_frame)
+    
+    df_nuevo.loc[df_nuevo["frame_number"] == i, "Aceleracion(Rodilla)_X"] = aceleracion_actual_rodilla[0]
+    df_nuevo.loc[df_nuevo["frame_number"] == i, "Aceleracion(Rodilla)_Y"] = aceleracion_actual_rodilla[1]
+    df_nuevo.loc[df_nuevo["frame_number"] == i, "Aceleracion(Cadera)_X"] = aceleracion_actual_cadera[0]
+    df_nuevo.loc[df_nuevo["frame_number"] == i, "Aceleracion(Cadera)_Y"] = aceleracion_actual_cadera[1]
+    
+    vel_prev, vel_actual = extraer_velocidad_angular(df_nuevo, i), extraer_velocidad_angular(df_nuevo, i+1)
     acel_angular = (vel_actual - vel_prev) / tiempo_por_frame
     df_nuevo.loc[df_nuevo["frame_number"] == i, "AceleracionAngular"] = acel_angular
-
-df_nuevo['AceleracionAngular'] = savgol_filter(df_nuevo['AceleracionAngular'], window_length=3, polyorder=2)
+    
+df_nuevo['Aceleracion(Cadera)_Y'] = savgol_filter(df_nuevo['Aceleracion(Cadera)_Y'], window_length=20, polyorder=2)
+df_nuevo['AceleracionAngular'] = savgol_filter(df_nuevo['AceleracionAngular'], window_length=11, polyorder=2)
 df_nuevo.interpolate(method='linear',inplace=True)
 
 for i in range(0, frame_index-1):
@@ -156,7 +197,7 @@ for i in range(0, frame_index-1):
     magnitud_fuerza_gemelo = calcular_fuerza_gemelo(df_nuevo, i, pos_left_knee, pos_left_ankle, pos_left_heel, pos_left_foot_index)
     df_nuevo.loc[df_nuevo["frame_number"] == i, "FuerzaGemelo"] = magnitud_fuerza_gemelo
 
-df_nuevo['FuerzaGemelo'] = savgol_filter(df_nuevo['FuerzaGemelo'], window_length=10, polyorder=2)
+df_nuevo['FuerzaGemelo'] = savgol_filter(df_nuevo['FuerzaGemelo'], window_length=11, polyorder=2)
 df_nuevo.interpolate(method='linear',inplace=True)
 df_nuevo.to_csv(csv_file_path, index=False)
 
